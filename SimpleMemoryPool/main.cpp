@@ -1,46 +1,43 @@
 ﻿#include "SimpleMemoryPool.h"
 
-class Point {
-    int m_x;
-    int m_y;
-public:
-    Point(int x, int y) : m_x(x), m_y(y) {
+#include <cstdio>
+
+struct Point {
+    float x;
+    float y;
+
+    Point(float _x, float _y) : x(_x), y(_y) {
         printf("in Point constructor\n");
     }
-
     ~Point() {
         printf("in point destructor\n");
-    }
-
-    void log() const {
-        printf("Point : (%d,%d)\n", m_x, m_y);
     }
 };
 
 int main() {
     SimpleMemoryPool sMemPool(ALLOCATOR_SIZE, ALLOCATOR_CHUNCK_SIZE);
     sMemPool.init();
-    sMemPool.logMem();
+    logMem(&sMemPool);
 
     void* ptr = sMemPool.allocateMem();
-    sMemPool.logMem();
+    logMem(&sMemPool);
 
     void* ptr2 = sMemPool.allocateMem();
     void* ptr3 = sMemPool.allocateMem();
-    sMemPool.logMem();
+    logMem(&sMemPool);
 
     sMemPool.freeMem(ptr2);
-    sMemPool.logMem();
+    logMem(&sMemPool);
 
-    Point* p = sMemPool.construct<Point>(12, 25);
-    p->log();
-    sMemPool.logMem();
+    Point* p = sMemPool.construct<Point>(12.0f, 25.0f);
+    printf("Point is : %.2f, %.2f\n", p->x, p->y);
+    logMem(&sMemPool);
     sMemPool.destruct(p);
-    sMemPool.logMem();
+    logMem(&sMemPool);
 
-    auto leakedMem = sMemPool.getUsingMem();
-    for (const auto& m : leakedMem) {
-        printf("leaked mem address : %lu\n", (unsigned long)m);
+    auto leakedMem = sMemPool.getUsingMemories();
+    for (const auto & m : leakedMem) {
+        printf("leaked mem address : %zd\n", reinterpret_cast<std::uintptr_t>(m));
     }
 
 	return 0;
