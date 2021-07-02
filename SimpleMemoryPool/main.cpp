@@ -2,6 +2,9 @@
 
 #include <cstdio>
 
+#define ALLOCATOR_SIZE 1024 * 1024
+#define ALLOCATOR_CHUNCK_SIZE 256
+
 struct Point {
     float x;
     float y;
@@ -16,7 +19,6 @@ struct Point {
 
 int main() {
     SimpleMemoryPool sMemPool(ALLOCATOR_SIZE, ALLOCATOR_CHUNCK_SIZE);
-    sMemPool.init();
     logMem(&sMemPool);
 
     void* ptr = sMemPool.allocateMem();

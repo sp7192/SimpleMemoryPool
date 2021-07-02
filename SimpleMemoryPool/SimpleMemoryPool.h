@@ -3,10 +3,6 @@
 #include <utility>
 #include <new>
 
-#define ALLOCATOR_SIZE 1024 * 1024
-#define ALLOCATOR_CHUNCK_SIZE 256
-
-
 class SimpleMemoryPool
 {
     class Impl;
@@ -21,10 +17,8 @@ public:
     SimpleMemoryPool(const SimpleMemoryPool &&)             = delete;
     SimpleMemoryPool& operator=(const SimpleMemoryPool &&)  = delete;
 
-    void    init();
     void *  allocateMem();
     void    freeMem(void * ptr);
-    void    reset();
 
     friend void logMem(const SimpleMemoryPool * mem);
 
