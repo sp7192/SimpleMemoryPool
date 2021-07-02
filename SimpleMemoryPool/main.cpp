@@ -35,10 +35,5 @@ int main() {
     sMemPool.destruct(p);
     logMem(&sMemPool);
 
-    auto leakedMem = sMemPool.getUsingMemories();
-    for (const auto & m : leakedMem) {
-        printf("leaked mem address : %zd\n", reinterpret_cast<std::uintptr_t>(m));
-    }
-
 	return 0;
 }
