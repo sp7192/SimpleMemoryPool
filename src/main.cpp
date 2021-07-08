@@ -1,4 +1,5 @@
 ﻿#include "SimpleMemoryPool.h"
+#include "gtest/gtest.h"
 
 #include <cstdio>
 
@@ -17,25 +18,32 @@ struct Point {
     }
 };
 
-int main() {
-    SimpleMemoryPool sMemPool(ALLOCATOR_SIZE, ALLOCATOR_CHUNCK_SIZE);
-    logMem(&sMemPool);
+TEST(SimpleMemoryPoolTest, IntegrityChecking) {
+    SimpleMemoryPool simpleMemoryPool(ALLOCATOR_SIZE, ALLOCATOR_CHUNCK_SIZE);
+    logMem(&simpleMemoryPool);
+    size_t memoryBlockCount = ALLOCATOR_SIZE / ALLOCATOR_CHUNCK_SIZE;
+    EXPECT_EQ(simpleMemoryPool.getMemoryBlockSize(), ALLOCATOR_CHUNCK_SIZE);
+    EXPECT_EQ(simpleMemoryPool.getMemoryTotalSize(), ALLOCATOR_SIZE);
+    EXPECT_EQ(simpleMemoryPool.getMemoryBlocksCount(), memoryBlockCount);
 
-    MemoryBlock met = sMemPool.allocateMem();
-    logMem(&sMemPool);
+    MemoryBlock mem = simpleMemoryPool.allocateMem();
+    logMem(&simpleMemoryPool);
 
-    MemoryBlock mem2 = sMemPool.allocateMem();
-    MemoryBlock mem3 = sMemPool.allocateMem();
-    logMem(&sMemPool);
+    MemoryBlock mem2 = simpleMemoryPool.allocateMem();
+    MemoryBlock mem3 = simpleMemoryPool.allocateMem();
+    logMem(&simpleMemoryPool);
 
-    sMemPool.freeMem(mem2.ptr);
-    logMem(&sMemPool);
+    simpleMemoryPool.freeMem(mem2.ptr);
+    logMem(&simpleMemoryPool);
 
-    Point* p = sMemPool.construct<Point>(12.0f, 25.0f);
+    Point* p = simpleMemoryPool.construct<Point>(12.0f, 25.0f);
     printf("Point is : %.2f, %.2f\n", p->x, p->y);
-    logMem(&sMemPool);
-    sMemPool.destruct(p);
-    logMem(&sMemPool);
+    logMem(&simpleMemoryPool);
+    simpleMemoryPool.destruct(p);
+    logMem(&simpleMemoryPool);
+}
 
-    return 0;
+int main(int argc, char** argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

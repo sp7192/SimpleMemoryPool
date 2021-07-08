@@ -28,6 +28,13 @@ public:
     T * construct(Args && ... args);
     template<typename T>
     void destruct(T * ptr);
+
+    unsigned long long  getMemoryTotalSize() const;
+    size_t getMemoryUsedSize() const;
+    size_t getMemoryBlockSize() const;
+    size_t getMemoryBlocksCount() const;
+    size_t getFreeMemoryBlocksCount() const;
+    size_t getUsedMemoryBlocksCount() const;
 };
 template<typename T, class ... Args>
 T * SimpleMemoryPool::construct(Args && ... args) {

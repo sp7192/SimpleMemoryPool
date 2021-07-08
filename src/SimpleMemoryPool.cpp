@@ -6,38 +6,38 @@
 
 struct SimpleMemoryPool::Impl
 {
-    unsigned long long           totalSize;
-    size_t                       used;
-    size_t                       chunkSize;
-    std::vector<MemoryBlock>     freePtrList;
-    std::vector<MemoryBlock>     usingPtrList;
-    void *                       start;
+    unsigned long long           memoryTotalSize;
+    size_t                       memoryUsedSize;
+    size_t                       memoryBlockSize;
+    std::vector<MemoryBlock>     freeMemoryBlocks;
+    std::vector<MemoryBlock>     usedMemoryBlocks;
+    void *                       memoryBlockStartPtr;
 
     Impl(const unsigned long long totalSize, const size_t chunkSize);
     ~Impl();
 };
 
 SimpleMemoryPool::Impl::Impl(const unsigned long long totalSize, const size_t chunkSize) 
-            : totalSize(totalSize), used(0), chunkSize(chunkSize), start(nullptr) {
-    start = malloc(totalSize);
-    if (!start) {
+            : memoryTotalSize(totalSize), memoryUsedSize(0), memoryBlockSize(chunkSize), memoryBlockStartPtr(nullptr) {
+    memoryBlockStartPtr = malloc(totalSize);
+    if (!memoryBlockStartPtr) {
         printf("COULD NOT ALLOCATE %llu memory\n", totalSize);
     }
     else {
         printf("Allocation Successfull\n");
     }
     auto nChunks = totalSize / chunkSize;
-    freePtrList.reserve(nChunks);
+    freeMemoryBlocks.reserve(nChunks);
     for (int i = 0; i < nChunks; ++i) {
-        unsigned char* address = (unsigned char*)start + i * chunkSize;
-        freePtrList.push_back({address, chunkSize});
+        unsigned char* address = (unsigned char*)memoryBlockStartPtr + i * chunkSize;
+        freeMemoryBlocks.push_back({address, chunkSize});
     }
 }
 
 SimpleMemoryPool::Impl::~Impl() {
-    if (start) {
-        free(start);
-        start = nullptr;
+    if (memoryBlockStartPtr) {
+        free(memoryBlockStartPtr);
+        memoryBlockStartPtr = nullptr;
     }
 }
 
@@ -51,11 +51,11 @@ SimpleMemoryPool::~SimpleMemoryPool() {
 
 MemoryBlock SimpleMemoryPool::allocateMem() {
     MemoryBlock ret;
-    if (!m_pimpl->freePtrList.empty()) {
-        ret = m_pimpl->freePtrList.back();
-        m_pimpl->usingPtrList.push_back(ret);
-        m_pimpl->freePtrList.pop_back();
-        m_pimpl->used += m_pimpl->chunkSize;
+    if (!m_pimpl->freeMemoryBlocks.empty()) {
+        ret = m_pimpl->freeMemoryBlocks.back();
+        m_pimpl->usedMemoryBlocks.push_back(ret);
+        m_pimpl->freeMemoryBlocks.pop_back();
+        m_pimpl->memoryUsedSize += m_pimpl->memoryBlockSize;
     }
     return ret;
 }
@@ -63,26 +63,51 @@ MemoryBlock SimpleMemoryPool::allocateMem() {
 bool SimpleMemoryPool::freeMem(void * ptr) {
     bool ret = false;
     if (ptr) {
-        auto it = std::find_if(m_pimpl->usingPtrList.cbegin(), m_pimpl->usingPtrList.cend(),
+        auto it = std::find_if(m_pimpl->usedMemoryBlocks.cbegin(), m_pimpl->usedMemoryBlocks.cend(),
             [=](const MemoryBlock & m1) {
-                return  m1.ptr == ptr && m1.size == m_pimpl->chunkSize;
+                return  m1.ptr == ptr && m1.size == m_pimpl->memoryBlockSize;
             });
 
-        if (it != m_pimpl->usingPtrList.end()) {
-            m_pimpl->used -= m_pimpl->chunkSize;
-            m_pimpl->usingPtrList.erase(it);
-            m_pimpl->freePtrList.push_back({ (unsigned char*)ptr, m_pimpl->chunkSize });
+        if (it != m_pimpl->usedMemoryBlocks.end()) {
+            m_pimpl->memoryUsedSize -= m_pimpl->memoryBlockSize;
+            m_pimpl->usedMemoryBlocks.erase(it);
+            m_pimpl->freeMemoryBlocks.push_back({ (unsigned char*)ptr, m_pimpl->memoryBlockSize });
             ret = true;
         }
     }
     return ret;
 }
 
+unsigned long long  SimpleMemoryPool::getMemoryTotalSize() const {
+    return m_pimpl->memoryTotalSize;
+}
+
+size_t SimpleMemoryPool::getMemoryUsedSize() const {
+    return m_pimpl->memoryUsedSize;
+}
+
+size_t SimpleMemoryPool::getMemoryBlockSize() const {
+    return m_pimpl->memoryBlockSize;
+}
+
+size_t SimpleMemoryPool::getMemoryBlocksCount() const {
+    return m_pimpl->memoryTotalSize / m_pimpl->memoryBlockSize;
+}
+
+size_t SimpleMemoryPool::getFreeMemoryBlocksCount() const {
+    return m_pimpl->freeMemoryBlocks.size();
+}
+
+size_t SimpleMemoryPool::getUsedMemoryBlocksCount() const {
+    return m_pimpl->usedMemoryBlocks.size();
+}
+
+
 void logMem(const SimpleMemoryPool * mem) {
     if (mem) {
         printf("================\n");
-        printf("Total Mem : %llu, used Mem : %llu\n", mem->m_pimpl->totalSize, mem->m_pimpl->used);
-        auto totalChunks = mem->m_pimpl->totalSize / mem->m_pimpl->chunkSize;
-        printf("Total chuncks : %llu, used chuncks : %llu\n", totalChunks, totalChunks - mem->m_pimpl->freePtrList.size());
+        printf("Total Memory size : %llu, memoryUsedSize Mem : %llu\n", mem->getMemoryTotalSize(), mem->getMemoryUsedSize());
+        printf("Total chuncks : %llu, memoryUsedSize chuncks : %llu\n", mem->getMemoryBlocksCount(),
+                                                                        mem->getMemoryBlocksCount() - mem->getFreeMemoryBlocksCount());
     }
 }
