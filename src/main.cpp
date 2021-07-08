@@ -1,4 +1,4 @@
-﻿#include "SimpleMemoryPool.h"
+﻿#include "SimpleFixedMemoryPool.h"
 #include "gtest/gtest.h"
 
 #include <cstdio>
@@ -96,6 +96,7 @@ TEST(SimpleMemoryPoolTest, CheckDestruct) {
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount);
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 0);
 }
+
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
