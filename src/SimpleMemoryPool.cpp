@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <vector>
 
-struct SimpleMemoryPool::Impl
+struct SimpleFixedMemoryPool::Impl
 {
     unsigned long long           memoryTotalSize;
     size_t                       memoryUsedSize;
@@ -17,7 +17,7 @@ struct SimpleMemoryPool::Impl
     ~Impl();
 };
 
-SimpleMemoryPool::Impl::Impl(const unsigned long long totalSize, const size_t chunkSize) 
+SimpleFixedMemoryPool::Impl::Impl(const unsigned long long totalSize, const size_t chunkSize) 
             : memoryTotalSize(totalSize), memoryUsedSize(0), memoryBlockSize(chunkSize), memoryBlockStartPtr(nullptr) {
     memoryBlockStartPtr = malloc(totalSize);
     if (!memoryBlockStartPtr) {
@@ -34,22 +34,22 @@ SimpleMemoryPool::Impl::Impl(const unsigned long long totalSize, const size_t ch
     }
 }
 
-SimpleMemoryPool::Impl::~Impl() {
+SimpleFixedMemoryPool::Impl::~Impl() {
     if (memoryBlockStartPtr) {
         free(memoryBlockStartPtr);
         memoryBlockStartPtr = nullptr;
     }
 }
 
-SimpleMemoryPool::SimpleMemoryPool(const unsigned long long totalSize, const size_t chunkSize)
+SimpleFixedMemoryPool::SimpleFixedMemoryPool(const unsigned long long totalSize, const size_t chunkSize)
     : m_pimpl(new Impl(totalSize, chunkSize)) {
 }
 
-SimpleMemoryPool::~SimpleMemoryPool() {
+SimpleFixedMemoryPool::~SimpleFixedMemoryPool() {
     delete m_pimpl;
 }
 
-MemoryBlock SimpleMemoryPool::allocateMem() {
+MemoryBlock SimpleFixedMemoryPool::allocateMem() {
     MemoryBlock ret;
     if (!m_pimpl->freeMemoryBlocks.empty()) {
         ret = m_pimpl->freeMemoryBlocks.back();
@@ -60,7 +60,7 @@ MemoryBlock SimpleMemoryPool::allocateMem() {
     return ret;
 }
 
-bool SimpleMemoryPool::freeMem(void * ptr) {
+bool SimpleFixedMemoryPool::freeMem(void * ptr) {
     bool ret = false;
     if (ptr) {
         auto it = std::find_if(m_pimpl->usedMemoryBlocks.cbegin(), m_pimpl->usedMemoryBlocks.cend(),
@@ -78,32 +78,32 @@ bool SimpleMemoryPool::freeMem(void * ptr) {
     return ret;
 }
 
-unsigned long long  SimpleMemoryPool::getMemoryTotalSize() const {
+unsigned long long  SimpleFixedMemoryPool::getMemoryTotalSize() const {
     return m_pimpl->memoryTotalSize;
 }
 
-size_t SimpleMemoryPool::getMemoryUsedSize() const {
+size_t SimpleFixedMemoryPool::getMemoryUsedSize() const {
     return m_pimpl->memoryUsedSize;
 }
 
-size_t SimpleMemoryPool::getMemoryBlockSize() const {
+size_t SimpleFixedMemoryPool::getMemoryBlockSize() const {
     return m_pimpl->memoryBlockSize;
 }
 
-size_t SimpleMemoryPool::getMemoryBlocksCount() const {
+size_t SimpleFixedMemoryPool::getMemoryBlocksCount() const {
     return m_pimpl->memoryTotalSize / m_pimpl->memoryBlockSize;
 }
 
-size_t SimpleMemoryPool::getFreeMemoryBlocksCount() const {
+size_t SimpleFixedMemoryPool::getFreeMemoryBlocksCount() const {
     return m_pimpl->freeMemoryBlocks.size();
 }
 
-size_t SimpleMemoryPool::getUsedMemoryBlocksCount() const {
+size_t SimpleFixedMemoryPool::getUsedMemoryBlocksCount() const {
     return m_pimpl->usedMemoryBlocks.size();
 }
 
 
-void logMem(const SimpleMemoryPool * mem) {
+void logMem(const SimpleFixedMemoryPool * mem) {
     if (mem) {
         printf("================\n");
         printf("Total Memory size : %llu, memoryUsedSize Mem : %llu\n", mem->getMemoryTotalSize(), mem->getMemoryUsedSize());

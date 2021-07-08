@@ -5,29 +5,29 @@
 
 #include "MemoryBlock.h"
 
-class SimpleMemoryPool
+class SimpleFixedMemoryPool
 {
-    class Impl;
+    struct Impl;
     Impl * m_pimpl;
 
 public:
-    SimpleMemoryPool(const unsigned long long totalSize, const size_t chunckSize);
-    ~SimpleMemoryPool();
+    SimpleFixedMemoryPool(const unsigned long long totalSize, const size_t chunckSize);
+    ~SimpleFixedMemoryPool();
 
-    SimpleMemoryPool(const SimpleMemoryPool &)              = delete;
-    SimpleMemoryPool & operator=(const SimpleMemoryPool &)  = delete;
-    SimpleMemoryPool(const SimpleMemoryPool &&)             = delete;
-    SimpleMemoryPool& operator=(const SimpleMemoryPool &&)  = delete;
+    SimpleFixedMemoryPool(const SimpleFixedMemoryPool &)              = delete;
+    SimpleFixedMemoryPool & operator=(const SimpleFixedMemoryPool &)  = delete;
+    SimpleFixedMemoryPool(const SimpleFixedMemoryPool &&)             = delete;
+    SimpleFixedMemoryPool& operator=(const SimpleFixedMemoryPool &&)  = delete;
 
     MemoryBlock  allocateMem();
     bool freeMem(void * ptr);
 
-    friend void logMem(const SimpleMemoryPool * mem);
+    friend void logMem(const SimpleFixedMemoryPool * mem);
 
     template<typename T, class ... Args>
     T * construct(Args && ... args);
     template<typename T>
-    void destruct(T * ptr);
+    bool destruct(T * ptr);
 
     unsigned long long  getMemoryTotalSize() const;
     size_t getMemoryUsedSize() const;
@@ -37,7 +37,7 @@ public:
     size_t getUsedMemoryBlocksCount() const;
 };
 template<typename T, class ... Args>
-T * SimpleMemoryPool::construct(Args && ... args) {
+T * SimpleFixedMemoryPool::construct(Args && ... args) {
     T * ret = nullptr;
     MemoryBlock mem = allocateMem();
     if (mem.ptr && mem.size >= sizeof(T)) {
@@ -47,9 +47,11 @@ T * SimpleMemoryPool::construct(Args && ... args) {
 }
 
 template<typename T>
-void SimpleMemoryPool::destruct(T * ptr) {
+bool SimpleFixedMemoryPool::destruct(T * ptr) {
+    bool ret = false;
     if (ptr) {
         ptr->~T();
-        freeMem((void*)ptr);
+        ret = freeMem((void*)ptr);
     }
+    return ret;
 }
