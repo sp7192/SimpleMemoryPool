@@ -1,3 +1,9 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
-add_executable (SimpleMemoryPool "main.cpp" "SimpleMemoryPool.h" "SimpleMemoryPool.cpp")
+
+add_executable (SimpleMemoryPool 
+				"src/main.cpp" 
+				"src/SimpleMemoryPool.cpp"
+				"src/SimpleMemoryPool.h"
+				"src/MemoryBlock.h"
+) 

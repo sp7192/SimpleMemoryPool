@@ -21,17 +21,17 @@ int main() {
     SimpleMemoryPool sMemPool(ALLOCATOR_SIZE, ALLOCATOR_CHUNCK_SIZE);
     logMem(&sMemPool);
 
-    void* ptr = sMemPool.allocateMem();
+    MemoryBlock met = sMemPool.allocateMem();
     logMem(&sMemPool);
 
-    void* ptr2 = sMemPool.allocateMem();
-    void* ptr3 = sMemPool.allocateMem();
+    MemoryBlock mem2 = sMemPool.allocateMem();
+    MemoryBlock mem3 = sMemPool.allocateMem();
     logMem(&sMemPool);
 
-    sMemPool.freeMem(ptr2);
+    sMemPool.freeMem(mem2.ptr);
     logMem(&sMemPool);
 
-    Point* p = sMemPool.construct<Point>(12.0f, 25.0f);
+    Point * p = sMemPool.construct<Point>(12.0f, 25.0f);
     printf("Point is : %.2f, %.2f\n", p->x, p->y);
     logMem(&sMemPool);
     sMemPool.destruct(p);

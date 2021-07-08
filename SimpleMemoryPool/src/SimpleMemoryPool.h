@@ -3,6 +3,8 @@
 #include <utility>
 #include <new>
 
+#include "MemoryBlock.h"
+
 class SimpleMemoryPool
 {
     class Impl;
@@ -17,25 +19,30 @@ public:
     SimpleMemoryPool(const SimpleMemoryPool &&)             = delete;
     SimpleMemoryPool& operator=(const SimpleMemoryPool &&)  = delete;
 
-    void *  allocateMem();
-    void    freeMem(void * ptr);
+    MemoryBlock  allocateMem();
+    bool freeMem(void * ptr);
 
     friend void logMem(const SimpleMemoryPool * mem);
 
     template<typename T, class ... Args>
     T * construct(Args && ... args);
     template<typename T>
-    void destruct(T* ptr);
+    void destruct(T * ptr);
 };
 template<typename T, class ... Args>
 T * SimpleMemoryPool::construct(Args && ... args) {
-    void * p = allocateMem();
-    T * ptr = new (p) T(std::forward<Args>(args)...);
-    return ptr;
+    T * ret = nullptr;
+    MemoryBlock mem = allocateMem();
+    if (mem.ptr && mem.size >= sizeof(T)) {
+        ret = new (mem.ptr) T(std::forward<Args>(args)...);
+    }
+    return ret;
 }
 
 template<typename T>
-void SimpleMemoryPool::destruct(T* ptr) {
-    ptr->~T();
-    freeMem((void*)ptr);
+void SimpleMemoryPool::destruct(T * ptr) {
+    if (ptr) {
+        ptr->~T();
+        freeMem((void*)ptr);
+    }
 }
