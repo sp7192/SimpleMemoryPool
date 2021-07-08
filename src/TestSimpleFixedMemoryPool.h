@@ -2,8 +2,7 @@
 #include "SimpleFixedMemoryPool.h"
 #include "gtest/gtest.h"
 
-#define ALLOCATOR_SIZE 1024 * 1024
-#define ALLOCATOR_CHUNCK_SIZE 256
+namespace smp = SimpleMemoryPool;
 
 struct Point {
     float x;
@@ -17,76 +16,85 @@ struct Point {
     }
 };
 
-TEST(SimpleMemoryPoolTest, CheckConstructor) {
-    SimpleFixedMemoryPool simpleMemoryPool(ALLOCATOR_SIZE, ALLOCATOR_CHUNCK_SIZE);
-    logMem(&simpleMemoryPool);
-    size_t memoryBlockCount = ALLOCATOR_SIZE / ALLOCATOR_CHUNCK_SIZE;
-    EXPECT_EQ(simpleMemoryPool.getMemoryBlockSize(), ALLOCATOR_CHUNCK_SIZE);
-    EXPECT_EQ(simpleMemoryPool.getMemoryTotalSize(), ALLOCATOR_SIZE);
+TEST(SimpleFixedMemoryPoolTest, CheckConstructor) {
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 256;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+    smp::logMem(&simpleMemoryPool);
+    EXPECT_EQ(simpleMemoryPool.getMemoryBlockSize(), memoryBlockSize);
+    EXPECT_EQ(simpleMemoryPool.getMemoryTotalSize(), totalMemorySize);
     EXPECT_EQ(simpleMemoryPool.getMemoryBlocksCount(), memoryBlockCount);
 }
 
-TEST(SimpleMemoryPoolTest, CheckAllocateMem) {
-    SimpleFixedMemoryPool simpleMemoryPool(ALLOCATOR_SIZE, ALLOCATOR_CHUNCK_SIZE);
-    size_t memoryBlockCount = ALLOCATOR_SIZE / ALLOCATOR_CHUNCK_SIZE;
+TEST(SimpleFixedMemoryPoolTest, CheckAllocateMem) {
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 256;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
 
-    MemoryBlock mem = simpleMemoryPool.allocateMem();
-    logMem(&simpleMemoryPool);
+    smp::MemoryBlock mem = simpleMemoryPool.allocateMem();
+    smp::logMem(&simpleMemoryPool);
     ASSERT_TRUE(mem.ptr);
-    EXPECT_EQ(mem.size, ALLOCATOR_CHUNCK_SIZE);
-    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), ALLOCATOR_CHUNCK_SIZE);
+    EXPECT_EQ(mem.size, memoryBlockSize);
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), memoryBlockSize);
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 1);
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 1);
 
-
-    MemoryBlock mem2 = simpleMemoryPool.allocateMem();
-    MemoryBlock mem3 = simpleMemoryPool.allocateMem();
-    logMem(&simpleMemoryPool);
-    ASSERT_NE(mem2.ptr, nullptr);
-    EXPECT_EQ(mem2.size, ALLOCATOR_CHUNCK_SIZE);
-    ASSERT_NE(mem3.ptr, nullptr);
-    EXPECT_EQ(mem3.size, ALLOCATOR_CHUNCK_SIZE);
-    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 3 * ALLOCATOR_CHUNCK_SIZE);
+    smp::MemoryBlock mem2 = simpleMemoryPool.allocateMem();
+    smp::MemoryBlock mem3 = simpleMemoryPool.allocateMem();
+    smp::logMem(&simpleMemoryPool);
+    ASSERT_TRUE(mem2.ptr);
+    EXPECT_EQ(mem2.size, memoryBlockSize);
+    ASSERT_TRUE(mem3.ptr);
+    EXPECT_EQ(mem3.size, memoryBlockSize);
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 3 * memoryBlockSize);
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 3);
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 3);
 }
 
-TEST(SimpleMemoryPoolTest, CheckFreeMem) {
-    SimpleFixedMemoryPool simpleMemoryPool(ALLOCATOR_SIZE, ALLOCATOR_CHUNCK_SIZE);
-    size_t memoryBlockCount = ALLOCATOR_SIZE / ALLOCATOR_CHUNCK_SIZE;
+TEST(SimpleFixedMemoryPoolTest, CheckFreeMem) {
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 256;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
 
-    MemoryBlock mem = simpleMemoryPool.allocateMem();
-    MemoryBlock mem2 = simpleMemoryPool.allocateMem();
-    MemoryBlock mem3 = simpleMemoryPool.allocateMem();
+    smp::MemoryBlock mem = simpleMemoryPool.allocateMem();
+    smp::MemoryBlock mem2 = simpleMemoryPool.allocateMem();
+    smp::MemoryBlock mem3 = simpleMemoryPool.allocateMem();
 
     bool res = simpleMemoryPool.freeMem(mem2.ptr);
-    logMem(&simpleMemoryPool);
+    smp::logMem(&simpleMemoryPool);
     EXPECT_TRUE(res);
-    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 2 * ALLOCATOR_CHUNCK_SIZE);
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 2 * memoryBlockSize);
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 2);
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 2);
 }
 
-TEST(SimpleMemoryPoolTest, CheckConstruct) {
+TEST(SimpleFixedMemoryPoolTest, CheckConstruct) {
     const float epsilon = 0.0001f;
 
-    SimpleFixedMemoryPool simpleMemoryPool(ALLOCATOR_SIZE, ALLOCATOR_CHUNCK_SIZE);
-    size_t memoryBlockCount = ALLOCATOR_SIZE / ALLOCATOR_CHUNCK_SIZE;
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 256;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
 
     Point* p = simpleMemoryPool.construct<Point>(12.0f, 25.0f);
     ASSERT_TRUE(p);
     EXPECT_TRUE(std::abs(p->x - 12.0f) < epsilon);
     EXPECT_TRUE(std::abs(p->y - 25.0f) < epsilon);
-    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), ALLOCATOR_CHUNCK_SIZE);
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), memoryBlockSize);
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 1);
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 1);
 }
 
-TEST(SimpleMemoryPoolTest, CheckDestruct) {
+TEST(SimpleFixedMemoryPoolTest, CheckDestruct) {
     const float epsilon = 0.0001f;
 
-    SimpleFixedMemoryPool simpleMemoryPool(ALLOCATOR_SIZE, ALLOCATOR_CHUNCK_SIZE);
-    size_t memoryBlockCount = ALLOCATOR_SIZE / ALLOCATOR_CHUNCK_SIZE;
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 256;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
 
     Point* p = simpleMemoryPool.construct<Point>(12.0f, 25.0f);
     bool    res = simpleMemoryPool.destruct(p);
