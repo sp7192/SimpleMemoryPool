@@ -18,10 +18,7 @@ struct SimpleMemoryPool::Impl
 };
 
 SimpleMemoryPool::Impl::Impl(const unsigned long long totalSize, const size_t chunkSize) 
-            : totalSize(totalSize), chunkSize(chunkSize) {
-    if (nullptr != start) {
-        free(start);
-    }
+            : totalSize(totalSize), used(0), chunkSize(chunkSize), start(nullptr) {
     start = malloc(totalSize);
     if (!start) {
         printf("COULD NOT ALLOCATE %llu memory\n", totalSize);

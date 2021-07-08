@@ -31,11 +31,11 @@ int main() {
     sMemPool.freeMem(mem2.ptr);
     logMem(&sMemPool);
 
-    Point * p = sMemPool.construct<Point>(12.0f, 25.0f);
+    Point* p = sMemPool.construct<Point>(12.0f, 25.0f);
     printf("Point is : %.2f, %.2f\n", p->x, p->y);
     logMem(&sMemPool);
     sMemPool.destruct(p);
     logMem(&sMemPool);
 
-	return 0;
+    return 0;
 }
