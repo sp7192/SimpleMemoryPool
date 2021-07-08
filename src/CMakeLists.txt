@@ -27,6 +27,7 @@ add_executable (SimpleMemoryPool
 				"main.cpp" 
 				"SimpleFixedMemoryPool.cpp"
 				"SimpleFixedMemoryPool.h"
+				"TestSimpleFixedMemoryPool.h"
 				"MemoryBlock.h"
 ) 
 
