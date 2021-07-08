@@ -18,7 +18,7 @@ struct Point {
     }
 };
 
-TEST(SimpleMemoryPoolTest, IntegrityChecking) {
+TEST(SimpleMemoryPoolTest, CheckConstructor) {
     SimpleMemoryPool simpleMemoryPool(ALLOCATOR_SIZE, ALLOCATOR_CHUNCK_SIZE);
     logMem(&simpleMemoryPool);
     size_t memoryBlockCount = ALLOCATOR_SIZE / ALLOCATOR_CHUNCK_SIZE;
@@ -28,13 +28,25 @@ TEST(SimpleMemoryPoolTest, IntegrityChecking) {
 
     MemoryBlock mem = simpleMemoryPool.allocateMem();
     logMem(&simpleMemoryPool);
+    EXPECT_NE(mem.ptr, nullptr);
+    EXPECT_EQ(mem.size, ALLOCATOR_CHUNCK_SIZE) << "mem size is " << mem.size;
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), ALLOCATOR_CHUNCK_SIZE);
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount -1);
+    EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 1);
+
 
     MemoryBlock mem2 = simpleMemoryPool.allocateMem();
     MemoryBlock mem3 = simpleMemoryPool.allocateMem();
     logMem(&simpleMemoryPool);
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 3 * ALLOCATOR_CHUNCK_SIZE);
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 3);
+    EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 3);
 
     simpleMemoryPool.freeMem(mem2.ptr);
     logMem(&simpleMemoryPool);
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 2 * ALLOCATOR_CHUNCK_SIZE);
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 2);
+    EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 2);
 
     Point* p = simpleMemoryPool.construct<Point>(12.0f, 25.0f);
     printf("Point is : %.2f, %.2f\n", p->x, p->y);
