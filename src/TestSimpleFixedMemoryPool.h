@@ -75,6 +75,7 @@ TEST(SimpleFixedMemoryPoolTest, SuccessfulAllocateMemory) {
     EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 3 * memoryBlockSize);
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 3);
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 3);
+    printf("Address of mem : 0x%.2x, mem2 : 0x%.2x, mem3 : 0x%.2x\n", mem.ptr, mem2.ptr, mem3.ptr);
 }
 
 TEST(SimpleFixedMemoryPoolTest, UnsuccessfulAllocateMemory) {

@@ -5,11 +5,9 @@
 
 #include "MemoryBlock.h"
 
-namespace SimpleMemoryPool {
-
-    
-
-    class SimpleFixedMemoryPool
+namespace SimpleMemoryPool
+{
+    class SimpleFixedMemoryPool 
     {
         struct Impl;
         Impl * m_pimpl;

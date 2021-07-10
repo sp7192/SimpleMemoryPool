@@ -31,7 +31,7 @@ namespace SimpleMemoryPool {
         }
         size_t blockCount = memoryBlockSize >  0 ? memoryTotalSize / memoryBlockSize : 0;
         freeMemoryBlocks.reserve(blockCount);
-        for (int i = 0; i < blockCount; ++i) {
+        for (int i = blockCount -1; i >= 0; --i) {
             unsigned char* address = (unsigned char*)memoryBlockStartPtr + i * memoryBlockSize;
             freeMemoryBlocks.push_back({ address, memoryBlockSize });
         }

@@ -1,7 +1,9 @@
 #pragma once
 
-namespace SimpleMemoryPool {
-    struct MemoryBlock {
+namespace SimpleMemoryPool
+{
+    struct MemoryBlock
+    {
         unsigned char *  ptr;
         size_t          size;
 
@@ -10,7 +12,8 @@ namespace SimpleMemoryPool {
     };
 
     template <typename T>
-    struct ArrayBlock {
+    struct ArrayBlock
+    {
         T *     ptr;
         size_t count;
 
