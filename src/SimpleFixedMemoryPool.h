@@ -6,6 +6,9 @@
 #include "MemoryBlock.h"
 
 namespace SimpleMemoryPool {
+
+    
+
     class SimpleFixedMemoryPool
     {
         struct Impl;
@@ -28,6 +31,11 @@ namespace SimpleMemoryPool {
         template<typename T>
         bool destruct(T ** ptr);
 
+        template<typename T, class ... Args>
+        ArrayBlock<T> constructArray(size_t count, Args && ... args);
+        template<typename T>
+        bool destructArray(ArrayBlock<T> * ptr);
+
         size_t getMemoryTotalSize()         const;
         size_t getMemoryUsedSize()          const;
         size_t getMemoryBlockSize()         const;
@@ -43,6 +51,9 @@ namespace SimpleMemoryPool {
         if (mem.ptr && mem.size >= sizeof(T)) {
             ret = new (mem.ptr) T(std::forward<Args>(args)...);
         }
+        else if (mem.ptr){
+            freeMemory(&mem);
+        }
         return ret;
     }
 
@@ -55,6 +66,35 @@ namespace SimpleMemoryPool {
             ret = freeMemory(&memoryBlock);
             *ptr = (T *)memoryBlock.ptr;
         }
+        return ret;
+    }
+
+    template<typename T, class ... Args>
+    ArrayBlock<T> SimpleFixedMemoryPool::constructArray(size_t count, Args && ... args) {
+        ArrayBlock<T> ret;
+        if (sizeof(T) * count <= getMemoryBlockSize()) {
+            MemoryBlock mem = allocateMemory();
+            if (mem.ptr) {
+                T * elemPtr = nullptr;
+                for (int i = 0; i < count; ++i) {
+                    elemPtr = new (ret.ptr + i) T(std::forward<Args>(args)...);
+                    if (!elemPtr) {
+                        freeMemory(&mem);
+                        break;
+                    }
+                }
+                ret = elemPtr ? { mem.ptr, count } : { nullptr, 0 };
+            }
+        }
+        else {
+            // TODO : to be implemented
+        }
+        return ret;
+    }
+
+    template<typename T>
+    bool SimpleFixedMemoryPool::destructArray(ArrayBlock<T>* ptr) {
+        bool ret = false;
         return ret;
     }
 }
