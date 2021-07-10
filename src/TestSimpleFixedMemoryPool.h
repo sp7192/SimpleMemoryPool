@@ -237,3 +237,19 @@ TEST(SimpleFixedMemoryPoolTest, SuccessfulConstructArrayInOneBlock) {
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 1);
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 1);
 }
+
+TEST(SimpleFixedMemoryPoolTest, SuccessfulDestructArrayInOneBlock) {
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 256;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+
+    smp::ArrayBlock points = simpleMemoryPool.constructArray<Point>(10, 0.0f, 0.0f);
+    printf("points count : %zd\n", points.count);
+    ASSERT_TRUE(points.ptr);
+
+    bool res = simpleMemoryPool.destructArray(&points);
+    EXPECT_TRUE(res);
+    EXPECT_FALSE(points.ptr);
+}
+

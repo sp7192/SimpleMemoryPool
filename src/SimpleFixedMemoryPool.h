@@ -101,8 +101,17 @@ namespace SimpleMemoryPool {
     }
 
     template<typename T>
-    bool SimpleFixedMemoryPool::destructArray(ArrayBlock<T>* ptr) {
+    bool SimpleFixedMemoryPool::destructArray(ArrayBlock<T> * array) {
         bool ret = false;
+        if (array->ptr) {
+            for (int i = 0; i < array->count; ++i) {
+                (*array)[i].~T();
+            }
+            MemoryBlock memoryBlock((unsigned char*)(array->ptr), getMemoryBlockSize());
+            ret = freeMemory(&memoryBlock);
+            array->ptr = (T * ) memoryBlock.ptr;
+            array->count = 0;
+        }
         return ret;
     }
 }
