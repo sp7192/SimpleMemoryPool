@@ -214,3 +214,26 @@ TEST(SimpleFixedMemoryPoolTest, UnsuccessfulDestructionOfnullptr) {
     res = simpleMemoryPool.destruct(&p);
     EXPECT_FALSE(res);
 }
+
+TEST(SimpleFixedMemoryPoolTest, SuccessfulConstructArrayInOneBlock) {
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 256;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+
+    smp::ArrayBlock points = simpleMemoryPool.constructArray<Point>(10, 0.0f, 0.0f);
+    printf("points count : %zd\n", points.count);
+    ASSERT_TRUE(points.ptr);
+    EXPECT_EQ(points.count, 10);
+    for (int i = 0; i < points.count; ++i) {
+        points[i].x = i;
+        points[i].y = 2 * i;
+    }
+    for (int i = 0; i < points.count; ++i) {
+        EXPECT_EQ(points[i].x, i);
+        EXPECT_EQ(points[i].y, 2 * i);
+    }
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), memoryBlockSize);
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 1);
+    EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 1);
+}

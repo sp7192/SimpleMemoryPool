@@ -75,6 +75,7 @@ namespace SimpleMemoryPool {
         if (sizeof(T) * count <= getMemoryBlockSize()) {
             MemoryBlock mem = allocateMemory();
             if (mem.ptr) {
+                ret.ptr = (T * ) mem.ptr;
                 T * elemPtr = nullptr;
                 for (int i = 0; i < count; ++i) {
                     elemPtr = new (ret.ptr + i) T(std::forward<Args>(args)...);
@@ -83,7 +84,14 @@ namespace SimpleMemoryPool {
                         break;
                     }
                 }
-                ret = elemPtr ? { mem.ptr, count } : { nullptr, 0 };
+                if (elemPtr) {
+                    ret.ptr = (T *) mem.ptr;
+                    ret.count = count;
+                }
+                else {
+                    ret.ptr = nullptr;
+                    ret.count = 0;
+                }
             }
         }
         else {
