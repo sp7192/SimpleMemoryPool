@@ -63,6 +63,22 @@ namespace SimpleMemoryPool {
         return ret;
     }
 
+    MemoryBlock SimpleFixedMemoryPool::allocateMemory(size_t size) {
+        MemoryBlock ret;
+        size_t blockCount = (size / getMemoryBlockSize()) + 1;
+        if (size > 0 && m_pimpl->freeMemoryBlocks.size() >= blockCount) {
+            ret = m_pimpl->freeMemoryBlocks.back();
+            for (size_t i = 0; i < blockCount; ++i) {
+                MemoryBlock block = m_pimpl->freeMemoryBlocks.back();
+                m_pimpl->usedMemoryBlocks.push_back(block);
+                m_pimpl->freeMemoryBlocks.pop_back();
+                m_pimpl->memoryUsedSize += m_pimpl->memoryBlockSize;
+            }
+            ret.size = getMemoryBlockSize() * blockCount;
+        }
+        return ret;
+    }
+
     bool SimpleFixedMemoryPool::freeMemory(MemoryBlock * memoryBlock) {
         bool ret = false;
         if (memoryBlock && memoryBlock->ptr) {

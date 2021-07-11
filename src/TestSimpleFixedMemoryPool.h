@@ -50,7 +50,6 @@ TEST(SimpleFixedMemoryPoolTest, ConstructionWithLowerTotalSize) {
     EXPECT_EQ(simpleMemoryPool.getMemoryBlockSize(), simpleMemoryPool.getMemoryTotalSize());
 }
 
-
 TEST(SimpleFixedMemoryPoolTest, SuccessfulAllocateMemory) {
     const size_t totalMemorySize = 1024 * 1024;
     const size_t memoryBlockSize = 256;
@@ -75,7 +74,6 @@ TEST(SimpleFixedMemoryPoolTest, SuccessfulAllocateMemory) {
     EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 3 * memoryBlockSize);
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 3);
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 3);
-    printf("Address of mem : 0x%.2x, mem2 : 0x%.2x, mem3 : 0x%.2x\n", mem.ptr, mem2.ptr, mem3.ptr);
 }
 
 TEST(SimpleFixedMemoryPoolTest, UnsuccessfulAllocateMemory) {
@@ -94,6 +92,30 @@ TEST(SimpleFixedMemoryPoolTest, UnsuccessfulAllocateMemory) {
     auto memory = simpleMemoryPool.allocateMemory();
     ASSERT_FALSE(memory.ptr);
     EXPECT_EQ(memory.size, 0);
+}
+
+TEST(SimpleFixedMemoryPoolTest, SuccessfulAllocateMemoryWithSize) {
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 256;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+
+    smp::MemoryBlock mem = simpleMemoryPool.allocateMemory(400);
+    ASSERT_TRUE(mem.ptr);
+    EXPECT_EQ(mem.size, 2 * memoryBlockSize);
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 2 * memoryBlockSize);
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 2);
+    EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 2);
+
+    smp::MemoryBlock mem2 = simpleMemoryPool.allocateMemory(200);
+    smp::MemoryBlock mem3 = simpleMemoryPool.allocateMemory(1000);
+    ASSERT_TRUE(mem2.ptr);
+    EXPECT_EQ(mem2.size, memoryBlockSize);
+    ASSERT_TRUE(mem3.ptr);
+    EXPECT_EQ(mem3.size, 4 * memoryBlockSize);
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 7 * memoryBlockSize);
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 7);
+    EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 7);
 }
 
 TEST(SimpleFixedMemoryPoolTest, SuccessfulFreeMemory) {
@@ -226,13 +248,13 @@ TEST(SimpleFixedMemoryPoolTest, SuccessfulConstructArrayInOneBlock) {
     printf("points count : %zd\n", points.count);
     ASSERT_TRUE(points.ptr);
     EXPECT_EQ(points.count, 10);
-    for (int i = 0; i < points.count; ++i) {
-        points[i].x = i;
-        points[i].y = 2 * i;
+    for (size_t i = 0; i < points.count; ++i) {
+        points[i].x = (float) i;
+        points[i].y = (float) 2 * i;
     }
-    for (int i = 0; i < points.count; ++i) {
-        EXPECT_EQ(points[i].x, i);
-        EXPECT_EQ(points[i].y, 2 * i);
+    for (size_t i = 0; i < points.count; ++i) {
+        EXPECT_EQ(points[i].x, (float) i);
+        EXPECT_EQ(points[i].y, (float) 2 * i);
     }
     EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), memoryBlockSize);
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 1);

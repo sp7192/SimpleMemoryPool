@@ -22,6 +22,7 @@ namespace SimpleMemoryPool
         SimpleFixedMemoryPool& operator=(const SimpleFixedMemoryPool&&) = delete;
 
         MemoryBlock allocateMemory();
+        MemoryBlock allocateMemory(size_t size);
         bool freeMemory(MemoryBlock * memoryBlock);
 
         template<typename T, class ... Args>
