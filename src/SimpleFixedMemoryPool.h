@@ -7,22 +7,28 @@
 
 namespace SimpleMemoryPool
 {
-    class SimpleFixedMemoryPool 
+    class SimpleFixedMemoryPool
     {
-        struct Impl;
-        Impl * m_pimpl;
+        size_t            m_totalSize;
+        size_t            m_usedSize;
+        size_t            m_blockSize;
+        size_t            m_freeBlocksCount;
+        size_t            m_blocksCount;
+        void *            m_startBlockPtr;
+
+        struct MemoryBlockInfo;
+        MemoryBlockInfo * m_blocksInfo;
 
     public:
         SimpleFixedMemoryPool(size_t totalSize, size_t chunckSize);
         ~SimpleFixedMemoryPool();
 
-        SimpleFixedMemoryPool(const SimpleFixedMemoryPool&)             = delete;
-        SimpleFixedMemoryPool& operator=(const SimpleFixedMemoryPool&)  = delete;
-        SimpleFixedMemoryPool(const SimpleFixedMemoryPool&&)            = delete;
-        SimpleFixedMemoryPool& operator=(const SimpleFixedMemoryPool&&) = delete;
+        SimpleFixedMemoryPool(const SimpleFixedMemoryPool &) = delete;
+        SimpleFixedMemoryPool & operator=(const SimpleFixedMemoryPool &) = delete;
+        SimpleFixedMemoryPool(const SimpleFixedMemoryPool &&) = delete;
+        SimpleFixedMemoryPool & operator=(const SimpleFixedMemoryPool &&) = delete;
 
         MemoryBlock allocateMemory();
-        MemoryBlock allocateMemory(size_t size);
         bool freeMemory(MemoryBlock * memoryBlock);
 
         template<typename T, class ... Args>
@@ -35,31 +41,36 @@ namespace SimpleMemoryPool
         template<typename T>
         bool destructArray(ArrayBlock<T> * ptr);
 
-        size_t getMemoryTotalSize()         const;
-        size_t getMemoryUsedSize()          const;
-        size_t getMemoryBlockSize()         const;
-        size_t getMemoryBlocksCount()       const;
-        size_t getFreeMemoryBlocksCount()   const;
-        size_t getUsedMemoryBlocksCount()   const;
+        size_t getMemoryTotalSize() const;
+        size_t getMemoryUsedSize() const;
+        size_t getMemoryBlockSize() const;
+        size_t getMemoryBlocksCount() const;
+        size_t getFreeMemoryBlocksCount() const;
+        size_t getUsedMemoryBlocksCount() const;
     };
 
     template<typename T, class ... Args>
-    T * SimpleFixedMemoryPool::construct(Args && ... args) {
+    T * SimpleFixedMemoryPool::construct(Args && ... args)
+    {
         T * ret = nullptr;
         MemoryBlock mem = allocateMemory();
-        if (mem.ptr && mem.size >= sizeof(T)) {
+        if(mem.ptr && mem.size >= sizeof(T))
+        {
             ret = new (mem.ptr) T(std::forward<Args>(args)...);
         }
-        else if (mem.ptr){
+        else if(mem.ptr)
+        {
             freeMemory(&mem);
         }
         return ret;
     }
 
     template<typename T>
-    bool SimpleFixedMemoryPool::destruct(T ** ptr) {
+    bool SimpleFixedMemoryPool::destruct(T ** ptr)
+    {
         bool ret = false;
-        if (*ptr) {
+        if(*ptr)
+        {
             (*ptr)->~T();
             MemoryBlock memoryBlock((unsigned char *)(*ptr), getMemoryBlockSize());
             ret = freeMemory(&memoryBlock);
@@ -69,46 +80,58 @@ namespace SimpleMemoryPool
     }
 
     template<typename T, class ... Args>
-    ArrayBlock<T> SimpleFixedMemoryPool::constructArray(size_t count, Args && ... args) {
+    ArrayBlock<T> SimpleFixedMemoryPool::constructArray(size_t count, Args && ... args)
+    {
+// TODO : Does not check if all blocks of a contiguous memory are free and need to change.
         ArrayBlock<T> ret;
-        if (sizeof(T) * count <= getMemoryBlockSize()) {
+        if(sizeof(T) * count <= getMemoryBlockSize())
+        {
             MemoryBlock mem = allocateMemory();
-            if (mem.ptr) {
-                ret.ptr = (T * ) mem.ptr;
+            if(mem.ptr)
+            {
+                ret.ptr = (T *)mem.ptr;
                 T * elemPtr = nullptr;
-                for (int i = 0; i < count; ++i) {
+                for(int i = 0; i < count; ++i)
+                {
                     elemPtr = new (ret.ptr + i) T(std::forward<Args>(args)...);
-                    if (!elemPtr) {
+                    if(!elemPtr)
+                    {
                         freeMemory(&mem);
                         break;
                     }
                 }
-                if (elemPtr) {
-                    ret.ptr = (T *) mem.ptr;
+                if(elemPtr)
+                {
+                    ret.ptr = (T *)mem.ptr;
                     ret.count = count;
                 }
-                else {
+                else
+                {
                     ret.ptr = nullptr;
                     ret.count = 0;
                 }
             }
         }
-        else {
+        else
+        {
             // TODO : to be implemented
         }
         return ret;
     }
 
     template<typename T>
-    bool SimpleFixedMemoryPool::destructArray(ArrayBlock<T> * array) {
+    bool SimpleFixedMemoryPool::destructArray(ArrayBlock<T> * array)
+    {
         bool ret = false;
-        if (array->ptr) {
-            for (int i = 0; i < array->count; ++i) {
+        if(array->ptr)
+        {
+            for(int i = 0; i < array->count; ++i)
+            {
                 (*array)[i].~T();
             }
-            MemoryBlock memoryBlock((unsigned char*)(array->ptr), getMemoryBlockSize());
+            MemoryBlock memoryBlock((unsigned char *)(array->ptr), getMemoryBlockSize());
             ret = freeMemory(&memoryBlock);
-            array->ptr = (T * ) memoryBlock.ptr;
+            array->ptr = (T *)memoryBlock.ptr;
             array->count = 0;
         }
         return ret;
