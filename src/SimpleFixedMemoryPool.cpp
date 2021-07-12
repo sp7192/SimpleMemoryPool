@@ -21,7 +21,7 @@ namespace SimpleMemoryPool
     {
         try
         {
-            m_startBlockPtr = malloc(m_totalSize);
+            m_startBlockPtr = calloc(m_totalSize, sizeof(uint8_t));
         }
         catch(...)
         {
@@ -76,6 +76,45 @@ namespace SimpleMemoryPool
         return ret;
     }
 
+    MemoryBlock SimpleFixedMemoryPool::allocateMemory(size_t size)
+    {
+        MemoryBlock ret;
+        size_t blocksCount = (size / m_blockSize) + 1;
+        if(m_freeBlocksCount >= blocksCount)
+        {
+            size_t i = 0;
+            while(i < m_blocksCount)
+            {
+                size_t j = i;
+                bool hasFound = true;
+                while(j < i + blocksCount)
+                {
+                    if(m_blocksInfo[j].isUsed)
+                    {
+                        hasFound = false;
+                        i = j;
+                        break;
+                    }
+                    ++j;
+                }
+                if(hasFound)
+                {
+                    ret = m_blocksInfo[i].memoryBlock;
+                    ret.size = m_blockSize * blocksCount;
+                    for(int j = 0; j < blocksCount; ++j)
+                    {
+                        m_blocksInfo[i + j].isUsed = true;
+                    }
+                    m_usedSize += ret.size;
+                    m_freeBlocksCount -= blocksCount;
+                    break;
+                }
+                ++i;
+            }
+        }
+        return ret;
+    }
+
     bool SimpleFixedMemoryPool::freeMemory(MemoryBlock * memoryBlock)
     {
         bool ret = false;
@@ -87,6 +126,7 @@ namespace SimpleMemoryPool
                 {
                     m_usedSize -= m_blockSize;
                     m_blocksInfo[i].isUsed = false;
+                    memset(memoryBlock->ptr, 0, memoryBlock->size);
                     memoryBlock->ptr = nullptr;
                     memoryBlock->size = 0;
                     m_freeBlocksCount++;

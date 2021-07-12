@@ -29,6 +29,7 @@ namespace SimpleMemoryPool
         SimpleFixedMemoryPool & operator=(const SimpleFixedMemoryPool &&) = delete;
 
         MemoryBlock allocateMemory();
+        MemoryBlock allocateMemory(size_t size);
         bool freeMemory(MemoryBlock * memoryBlock);
 
         template<typename T, class ... Args>
@@ -72,7 +73,7 @@ namespace SimpleMemoryPool
         if(*ptr)
         {
             (*ptr)->~T();
-            MemoryBlock memoryBlock((unsigned char *)(*ptr), getMemoryBlockSize());
+            MemoryBlock memoryBlock((unsigned char *)(*ptr), m_blockSize);
             ret = freeMemory(&memoryBlock);
             *ptr = (T *)memoryBlock.ptr;
         }
@@ -82,9 +83,8 @@ namespace SimpleMemoryPool
     template<typename T, class ... Args>
     ArrayBlock<T> SimpleFixedMemoryPool::constructArray(size_t count, Args && ... args)
     {
-// TODO : Does not check if all blocks of a contiguous memory are free and need to change.
         ArrayBlock<T> ret;
-        if(sizeof(T) * count <= getMemoryBlockSize())
+        if(sizeof(T) * count <= m_blockSize)
         {
             MemoryBlock mem = allocateMemory();
             if(mem.ptr)
@@ -129,7 +129,7 @@ namespace SimpleMemoryPool
             {
                 (*array)[i].~T();
             }
-            MemoryBlock memoryBlock((unsigned char *)(array->ptr), getMemoryBlockSize());
+            MemoryBlock memoryBlock((unsigned char *)(array->ptr), m_blockSize);
             ret = freeMemory(&memoryBlock);
             array->ptr = (T *)memoryBlock.ptr;
             array->count = 0;
