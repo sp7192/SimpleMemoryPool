@@ -79,7 +79,7 @@ namespace SimpleMemoryPool
     MemoryBlock SimpleFixedMemoryPool::allocateMemory(size_t size)
     {
         MemoryBlock ret;
-        size_t blocksCount = (size / m_blockSize) + 1;
+        size_t blocksCount = (size + m_blockSize - 1) / m_blockSize;
         if(m_freeBlocksCount >= blocksCount)
         {
             size_t i = 0;

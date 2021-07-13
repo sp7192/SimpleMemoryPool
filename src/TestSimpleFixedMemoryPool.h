@@ -85,6 +85,33 @@ TEST(SimpleFixedMemoryPoolTest, SuccessfulAllocateMemory)
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 3);
 }
 
+TEST(SimpleFixedMemoryPoolTest, SuccessfulAllocateMemoryWithSize)
+{
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 256;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+
+    smp::MemoryBlock mem = simpleMemoryPool.allocateMemory(300);
+    ASSERT_TRUE(mem.ptr);
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 2 *memoryBlockSize);
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 2);
+    EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 2);
+    EXPECT_EQ(mem.size, 2 * memoryBlockSize);
+
+    smp::MemoryBlock mem2 = simpleMemoryPool.allocateMemory(10);
+    smp::MemoryBlock mem3 = simpleMemoryPool.allocateMemory(1024);
+    logMemory(&simpleMemoryPool);
+    ASSERT_TRUE(mem2.ptr);
+    EXPECT_EQ(mem2.size, memoryBlockSize);
+    ASSERT_TRUE(mem3.ptr);
+    EXPECT_EQ(mem3.size, 4 * memoryBlockSize);
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 7 * memoryBlockSize);
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 7);
+    EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 7);
+
+}
+
 TEST(SimpleFixedMemoryPoolTest, UnsuccessfulAllocateMemory)
 {
     const size_t totalMemorySize = 1024;
