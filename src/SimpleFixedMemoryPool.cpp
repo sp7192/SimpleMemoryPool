@@ -80,22 +80,23 @@ namespace SimpleMemoryPool
     {
         MemoryBlock ret;
         size_t blocksCount = (size + m_blockSize - 1) / m_blockSize;
+        printf("%d> Blocks Count : %zu\n", __LINE__, blocksCount);
         if(m_freeBlocksCount >= blocksCount)
         {
+            printf("%d\n", __LINE__);
             size_t i = 0;
             while(i < m_blocksCount)
             {
                 size_t j = i;
-                bool hasFound = true;
-                while(j < i + blocksCount)
+                bool hasFound = false;
+                if(i + blocksCount < m_blocksCount)
                 {
-                    if(m_blocksInfo[j].isUsed)
-                    {
-                        hasFound = false;
-                        i = j;
-                        break;
-                    }
-                    ++j;
+                    auto it = std::find_if(m_blocksInfo + i, m_blocksInfo+ i + blocksCount, [](MemoryBlockInfo & memInfo){
+                        return memInfo.isUsed;
+                    });
+                    size_t dist = std::distance(m_blocksInfo + i, it);
+                    printf("Dist is : %zu", dist);
+                    hasFound = (it == (m_blocksInfo + i + blocksCount) || dist >= blocksCount);
                 }
                 if(hasFound)
                 {
