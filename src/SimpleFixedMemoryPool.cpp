@@ -80,32 +80,29 @@ namespace SimpleMemoryPool
     {
         MemoryBlock ret;
         size_t blocksCount = (size + m_blockSize - 1) / m_blockSize;
-        printf("%d> Blocks Count : %zu\n", __LINE__, blocksCount);
         if(m_freeBlocksCount >= blocksCount)
         {
-            printf("%d\n", __LINE__);
             size_t i = 0;
             while(i < m_blocksCount)
             {
-                size_t j = i;
-                bool hasFound = false;
-                if(i + blocksCount < m_blocksCount)
+                bool hasFreeBlocks = false;
+                auto beginPtr = m_blocksInfo + i;
+                auto endPtr = m_blocksInfo + i + blocksCount;
+                if(i < m_blocksCount)
                 {
-                    auto it = std::find_if(m_blocksInfo + i, m_blocksInfo+ i + blocksCount, [](MemoryBlockInfo & memInfo){
+                    auto it = std::find_if(beginPtr, endPtr, [](MemoryBlockInfo & memInfo){
                         return memInfo.isUsed;
                     });
-                    size_t dist = std::distance(m_blocksInfo + i, it);
-                    printf("Dist is : %zu", dist);
-                    hasFound = (it == (m_blocksInfo + i + blocksCount) || dist >= blocksCount);
+                    size_t dist = std::distance(beginPtr, it);
+                    hasFreeBlocks = (it == endPtr);
                 }
-                if(hasFound)
+                if(hasFreeBlocks)
                 {
                     ret = m_blocksInfo[i].memoryBlock;
                     ret.size = m_blockSize * blocksCount;
-                    for(int j = 0; j < blocksCount; ++j)
-                    {
-                        m_blocksInfo[i + j].isUsed = true;
-                    }
+                    std::for_each(beginPtr, endPtr, [](MemoryBlockInfo & memInfo) {
+                        memInfo.isUsed = true;
+                    });
                     m_usedSize += ret.size;
                     m_freeBlocksCount -= blocksCount;
                     break;
