@@ -93,7 +93,6 @@ namespace SimpleMemoryPool
                     auto it = std::find_if(beginPtr, endPtr, [](MemoryBlockInfo & memInfo){
                         return memInfo.isUsed;
                     });
-                    size_t dist = std::distance(beginPtr, it);
                     hasFreeBlocks = (it == endPtr);
                 }
                 if(hasFreeBlocks)
@@ -118,18 +117,24 @@ namespace SimpleMemoryPool
         bool ret = false;
         if(memoryBlock && memoryBlock->ptr && m_freeBlocksCount != m_blocksCount)
         {
-            for(size_t i = 0; i < m_blocksCount; ++i)
+            auto endPtr = m_blocksInfo + m_blocksCount;
+            auto it = std::find_if(m_blocksInfo, endPtr, [memoryBlock] (MemoryBlockInfo & memInfo) {
+                return memInfo.isUsed && memInfo.memoryBlock.ptr == memoryBlock->ptr;
+            });
+            if(it != endPtr)
             {
-                if(m_blocksInfo[i].isUsed && m_blocksInfo[i].memoryBlock.ptr == memoryBlock->ptr)
+                size_t blockCount = memoryBlock->size / m_blockSize;
+                for(size_t i = 0; i < blockCount; ++i)
                 {
                     m_usedSize -= m_blockSize;
-                    m_blocksInfo[i].isUsed = false;
+                    it->isUsed = false;
                     memset(memoryBlock->ptr, 0, memoryBlock->size);
                     memoryBlock->ptr = nullptr;
                     memoryBlock->size = 0;
-                    m_freeBlocksCount++;
-                    ret = true;
+                    ++m_freeBlocksCount;
+                    ++it;
                 }
+                ret = true;
             }
         }
         return ret;

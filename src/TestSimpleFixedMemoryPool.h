@@ -30,7 +30,7 @@ void logMemory(const smp::SimpleFixedMemoryPool * mem)
     }
 }
 
-TEST(SimpleFixedMemoryPoolTest, SuccsessfulConstruction)
+TEST(SMP_Construct, SuccsessfulConstruction)
 {
     const size_t totalMemorySize = 1024 * 1024;
     const size_t memoryBlockSize = 256;
@@ -42,7 +42,7 @@ TEST(SimpleFixedMemoryPoolTest, SuccsessfulConstruction)
     EXPECT_EQ(simpleMemoryPool.getMemoryBlocksCount(), memoryBlockCount);
 }
 
-TEST(SimpleFixedMemoryPoolTest, ConstructionWithIndivisbleBlocks)
+TEST(SMP_Construct, ConstructionWithIndivisbleBlocks)
 {
     const size_t totalMemorySize = 64;
     const size_t memoryBlockSize = 50;
@@ -50,7 +50,7 @@ TEST(SimpleFixedMemoryPoolTest, ConstructionWithIndivisbleBlocks)
     EXPECT_EQ(simpleMemoryPool.getMemoryBlocksCount(), 1);
 }
 
-TEST(SimpleFixedMemoryPoolTest, ConstructionWithLowerTotalSize)
+TEST(SMP_Construct, ConstructionWithLowerTotalSize)
 {
     const size_t totalMemorySize = 32;
     const size_t memoryBlockSize = 50;
@@ -58,7 +58,7 @@ TEST(SimpleFixedMemoryPoolTest, ConstructionWithLowerTotalSize)
     EXPECT_EQ(simpleMemoryPool.getMemoryBlockSize(), simpleMemoryPool.getMemoryTotalSize());
 }
 
-TEST(SimpleFixedMemoryPoolTest, SuccessfulAllocateMemory)
+TEST(SMP_Allocate, SuccessfulAllocateMemory)
 {
     const size_t totalMemorySize = 1024 * 1024;
     const size_t memoryBlockSize = 256;
@@ -85,7 +85,7 @@ TEST(SimpleFixedMemoryPoolTest, SuccessfulAllocateMemory)
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 3);
 }
 
-TEST(SimpleFixedMemoryPoolTest, SuccessfulAllocateMemoryWithSize)
+TEST(SMP_Allocate, SuccessfulAllocateMemoryWithSize)
 {
     const size_t totalMemorySize = 1024 * 1024;
     const size_t memoryBlockSize = 256;
@@ -111,7 +111,7 @@ TEST(SimpleFixedMemoryPoolTest, SuccessfulAllocateMemoryWithSize)
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 7);
 }
 
-TEST(SimpleFixedMemoryPoolTest, UnsuccessfulAllocateMemory)
+TEST(SMP_Allocate, UnsuccessfulAllocateMemory)
 {
     const size_t totalMemorySize = 1024;
     const size_t memoryBlockSize = 256;
@@ -131,7 +131,7 @@ TEST(SimpleFixedMemoryPoolTest, UnsuccessfulAllocateMemory)
     EXPECT_EQ(memory.size, 0);
 }
 
-TEST(SimpleFixedMemoryPoolTest, UnsuccessfulAllocateMemoryWithSize)
+TEST(SMP_Allocate, UnsuccessfulAllocateMemoryWithSize)
 {
     const size_t totalMemorySize = 1024;
     const size_t memoryBlockSize = 256;
@@ -141,25 +141,46 @@ TEST(SimpleFixedMemoryPoolTest, UnsuccessfulAllocateMemoryWithSize)
     smp::MemoryBlock mem = simpleMemoryPool.allocateMemory(200);
     ASSERT_TRUE(mem.ptr);
     EXPECT_EQ(mem.size, simpleMemoryPool.getMemoryBlockSize());
-
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), 3);
+    
     smp::MemoryBlock mem2 = simpleMemoryPool.allocateMemory(500);
     ASSERT_TRUE(mem2.ptr);
     EXPECT_EQ(mem2.size, 2 * simpleMemoryPool.getMemoryBlockSize());
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), 1);
 
     smp::MemoryBlock mem3 = simpleMemoryPool.allocateMemory(256);
     ASSERT_TRUE(mem3.ptr);
     EXPECT_EQ(mem3.size, simpleMemoryPool.getMemoryBlockSize());
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), 0);
 
     bool res = simpleMemoryPool.freeMemory(&mem);
     EXPECT_TRUE(res);
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), 1);
+
     res = simpleMemoryPool.freeMemory(&mem3);
     EXPECT_TRUE(res);
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), 2);
 
     smp::MemoryBlock mem4 = simpleMemoryPool.allocateMemory(500);
     ASSERT_FALSE(mem4.ptr);
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), 2);
+
+    smp::MemoryBlock mem5 = simpleMemoryPool.allocateMemory(150);
+    ASSERT_TRUE(mem5.ptr);
+    EXPECT_EQ(mem5.size, simpleMemoryPool.getMemoryBlockSize());
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), 1);
+
+    res = simpleMemoryPool.freeMemory(&mem2);
+    EXPECT_TRUE(res);
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), 3);
+
+    smp::MemoryBlock mem6 = simpleMemoryPool.allocateMemory(700);
+    ASSERT_TRUE(mem6.ptr);
+    EXPECT_EQ(mem6.size, 3 * simpleMemoryPool.getMemoryBlockSize());
+
 }
 
-TEST(SimpleFixedMemoryPoolTest, SuccessfulFreeMemory)
+TEST(SMP_Free, SuccessfulFreeMemory)
 {
     const size_t totalMemorySize = 1024 * 1024;
     const size_t memoryBlockSize = 256;
@@ -178,7 +199,7 @@ TEST(SimpleFixedMemoryPoolTest, SuccessfulFreeMemory)
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 2);
 }
 
-TEST(SimpleFixedMemoryPoolTest, MemoryBlockAfterSuccessfulFreeMemory)
+TEST(SMP_Free, MemoryBlockAfterSuccessfulFreeMemory)
 {
     const size_t totalMemorySize = 1024;
     const size_t memoryBlockSize = 256;
@@ -190,7 +211,7 @@ TEST(SimpleFixedMemoryPoolTest, MemoryBlockAfterSuccessfulFreeMemory)
     EXPECT_EQ(mem.size, 0);
 }
 
-TEST(SimpleFixedMemoryPoolTest, DoubleFreeMemory)
+TEST(SMP_Free, DoubleFreeMemory)
 {
     const size_t totalMemorySize = 1024;
     const size_t memoryBlockSize = 256;
@@ -202,7 +223,7 @@ TEST(SimpleFixedMemoryPoolTest, DoubleFreeMemory)
     EXPECT_FALSE(res);
 }
 
-TEST(SimpleFixedMemoryPoolTest, FreeNullMemory)
+TEST(SMP_Free, FreeNullMemory)
 {
     const size_t totalMemorySize = 1024;
     const size_t memoryBlockSize = 256;
@@ -213,7 +234,7 @@ TEST(SimpleFixedMemoryPoolTest, FreeNullMemory)
     EXPECT_FALSE(res);
 }
 
-TEST(SimpleFixedMemoryPoolTest, SuccessfulConstruct)
+TEST(SMP_Construct, SuccessfulConstruct)
 {
     const size_t totalMemorySize = 1024 * 1024;
     const size_t memoryBlockSize = 256;
@@ -229,7 +250,7 @@ TEST(SimpleFixedMemoryPoolTest, SuccessfulConstruct)
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 1);
 }
 
-TEST(SimpleFixedMemoryPoolTest, UnuccessfulExcessiveConstruct)
+TEST(SMP_Construct, UnuccessfulExcessiveConstruct)
 {
     const size_t totalMemorySize = 1024;
     const size_t memoryBlockSize = 256;
@@ -251,7 +272,7 @@ TEST(SimpleFixedMemoryPoolTest, UnuccessfulExcessiveConstruct)
     EXPECT_FALSE(point);
 }
 
-TEST(SimpleFixedMemoryPoolTest, UnsuccessfulConstructOnLowSpace)
+TEST(SMP_Construct, UnsuccessfulConstructOnLowSpace)
 {
     const size_t totalMemorySize = 256;
     const size_t memoryBlockSize = sizeof(Point) - 1;
@@ -262,7 +283,7 @@ TEST(SimpleFixedMemoryPoolTest, UnsuccessfulConstructOnLowSpace)
     ASSERT_FALSE(p);
 }
 
-TEST(SimpleFixedMemoryPoolTest, SuccessfulDestruct)
+TEST(SMP_Destruct, SuccessfulDestruct)
 {
     const size_t totalMemorySize = 1024 * 1024;
     const size_t memoryBlockSize = 256;
@@ -277,7 +298,7 @@ TEST(SimpleFixedMemoryPoolTest, SuccessfulDestruct)
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 0);
 }
 
-TEST(SimpleFixedMemoryPoolTest, UnsuccessfulDestructionOfnullptr)
+TEST(SMP_Destruct, UnsuccessfulDestructionOfnullptr)
 {
     const size_t totalMemorySize = 1024 * 1024;
     const size_t memoryBlockSize = 256;
@@ -289,7 +310,7 @@ TEST(SimpleFixedMemoryPoolTest, UnsuccessfulDestructionOfnullptr)
     EXPECT_FALSE(res);
 }
 
-TEST(SimpleFixedMemoryPoolTest, SuccessfulConstructArrayInOneBlock)
+TEST(SMP_ConstructArray, SuccessfulConstructArrayInOneBlock)
 {
     const size_t totalMemorySize = 1024 * 1024;
     const size_t memoryBlockSize = 256;
@@ -315,7 +336,7 @@ TEST(SimpleFixedMemoryPoolTest, SuccessfulConstructArrayInOneBlock)
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 1);
 }
 
-TEST(SimpleFixedMemoryPoolTest, SuccessfulDestructArrayInOneBlock)
+TEST(SMP_DestructArray, SuccessfulDestructArrayInOneBlock)
 {
     const size_t totalMemorySize = 1024 * 1024;
     const size_t memoryBlockSize = 256;
