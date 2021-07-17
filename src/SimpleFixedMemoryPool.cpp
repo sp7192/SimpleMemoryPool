@@ -83,7 +83,7 @@ namespace SimpleMemoryPool
         if(m_freeBlocksCount >= blocksCount)
         {
             size_t i = 0;
-            while(i < m_blocksCount)
+            while(i < m_blocksCount && (blocksCount <= (m_blocksCount - i)))
             {
                 bool hasFreeBlocks = false;
                 auto beginPtr = m_blocksInfo + i;
@@ -124,7 +124,7 @@ namespace SimpleMemoryPool
             if(it != endPtr)
             {
                 size_t blockCount = memoryBlock->size / m_blockSize;
-                for(size_t i = 0; i < blockCount; ++i)
+                for(size_t i = 0; i < blockCount; ++i, ++it)
                 {
                     m_usedSize -= m_blockSize;
                     it->isUsed = false;
@@ -132,7 +132,6 @@ namespace SimpleMemoryPool
                     memoryBlock->ptr = nullptr;
                     memoryBlock->size = 0;
                     ++m_freeBlocksCount;
-                    ++it;
                 }
                 ret = true;
             }

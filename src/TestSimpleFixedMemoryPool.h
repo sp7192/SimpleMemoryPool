@@ -4,6 +4,20 @@
 
 namespace smp = SimpleMemoryPool;
 
+void logMemory(const smp::SimpleFixedMemoryPool * mem, int line)
+{
+    if(mem)
+    {
+        printf("================\n");
+        printf("Line %d : Total Memory size : %zu, usedSize Mem : %zu\n", line, mem->getMemoryTotalSize(), mem->getMemoryUsedSize());
+        printf("Line %d : Total chuncks : %zu, usedSize chuncks : %zu\n", line, mem->getMemoryBlocksCount(),
+               mem->getMemoryBlocksCount() - mem->getFreeMemoryBlocksCount());
+        printf("================\n");
+    }
+}
+
+#define LOG_MEMORY(mem) do { logMemory(mem, __LINE__);} while(0)
+
 struct Point
 {
     float x;
@@ -19,24 +33,13 @@ struct Point
     }
 };
 
-void logMemory(const smp::SimpleFixedMemoryPool * mem)
-{
-    if(mem)
-    {
-        printf("================\n");
-        printf("Total Memory size : %zu, usedSize Mem : %zu\n", mem->getMemoryTotalSize(), mem->getMemoryUsedSize());
-        printf("Total chuncks : %zu, usedSize chuncks : %zu\n", mem->getMemoryBlocksCount(),
-               mem->getMemoryBlocksCount() - mem->getFreeMemoryBlocksCount());
-    }
-}
-
 TEST(SMP_Construct, SuccsessfulConstruction)
 {
     const size_t totalMemorySize = 1024 * 1024;
     const size_t memoryBlockSize = 256;
     smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize);
     size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
-    logMemory(&simpleMemoryPool);
+    LOG_MEMORY(&simpleMemoryPool);
     EXPECT_EQ(simpleMemoryPool.getMemoryBlockSize(), memoryBlockSize);
     EXPECT_EQ(simpleMemoryPool.getMemoryTotalSize(), totalMemorySize);
     EXPECT_EQ(simpleMemoryPool.getMemoryBlocksCount(), memoryBlockCount);
@@ -66,7 +69,7 @@ TEST(SMP_Allocate, SuccessfulAllocateMemory)
     size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
 
     smp::MemoryBlock mem = simpleMemoryPool.allocateMemory();
-    logMemory(&simpleMemoryPool);
+    LOG_MEMORY(&simpleMemoryPool);
     ASSERT_TRUE(mem.ptr);
     EXPECT_EQ(mem.size, memoryBlockSize);
     EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), memoryBlockSize);
@@ -75,7 +78,7 @@ TEST(SMP_Allocate, SuccessfulAllocateMemory)
 
     smp::MemoryBlock mem2 = simpleMemoryPool.allocateMemory();
     smp::MemoryBlock mem3 = simpleMemoryPool.allocateMemory();
-    logMemory(&simpleMemoryPool);
+    LOG_MEMORY(&simpleMemoryPool);
     ASSERT_TRUE(mem2.ptr);
     EXPECT_EQ(mem2.size, memoryBlockSize);
     ASSERT_TRUE(mem3.ptr);
@@ -101,7 +104,7 @@ TEST(SMP_Allocate, SuccessfulAllocateMemoryWithSize)
 
     smp::MemoryBlock mem2 = simpleMemoryPool.allocateMemory(10);
     smp::MemoryBlock mem3 = simpleMemoryPool.allocateMemory(1024);
-    logMemory(&simpleMemoryPool);
+    LOG_MEMORY(&simpleMemoryPool);
     ASSERT_TRUE(mem2.ptr);
     EXPECT_EQ(mem2.size, memoryBlockSize);
     ASSERT_TRUE(mem3.ptr);
@@ -138,38 +141,46 @@ TEST(SMP_Allocate, UnsuccessfulAllocateMemoryWithSize)
     smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize);
     size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
 
+    LOG_MEMORY(&simpleMemoryPool);
     smp::MemoryBlock mem = simpleMemoryPool.allocateMemory(200);
     ASSERT_TRUE(mem.ptr);
     EXPECT_EQ(mem.size, simpleMemoryPool.getMemoryBlockSize());
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), 3);
     
+    LOG_MEMORY(&simpleMemoryPool);
     smp::MemoryBlock mem2 = simpleMemoryPool.allocateMemory(500);
     ASSERT_TRUE(mem2.ptr);
     EXPECT_EQ(mem2.size, 2 * simpleMemoryPool.getMemoryBlockSize());
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), 1);
 
+    LOG_MEMORY(&simpleMemoryPool);
     smp::MemoryBlock mem3 = simpleMemoryPool.allocateMemory(256);
     ASSERT_TRUE(mem3.ptr);
     EXPECT_EQ(mem3.size, simpleMemoryPool.getMemoryBlockSize());
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), 0);
 
+    LOG_MEMORY(&simpleMemoryPool);
     bool res = simpleMemoryPool.freeMemory(&mem);
     EXPECT_TRUE(res);
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), 1);
 
+    LOG_MEMORY(&simpleMemoryPool);
     res = simpleMemoryPool.freeMemory(&mem3);
     EXPECT_TRUE(res);
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), 2);
 
+    LOG_MEMORY(&simpleMemoryPool);
     smp::MemoryBlock mem4 = simpleMemoryPool.allocateMemory(500);
     ASSERT_FALSE(mem4.ptr);
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), 2);
 
+    LOG_MEMORY(&simpleMemoryPool);
     smp::MemoryBlock mem5 = simpleMemoryPool.allocateMemory(150);
     ASSERT_TRUE(mem5.ptr);
     EXPECT_EQ(mem5.size, simpleMemoryPool.getMemoryBlockSize());
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), 1);
-
+    
+    LOG_MEMORY(&simpleMemoryPool);
     res = simpleMemoryPool.freeMemory(&mem2);
     EXPECT_TRUE(res);
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), 3);
@@ -192,7 +203,7 @@ TEST(SMP_Free, SuccessfulFreeMemory)
     smp::MemoryBlock mem3 = simpleMemoryPool.allocateMemory();
 
     bool res = simpleMemoryPool.freeMemory(&mem2);
-    logMemory(&simpleMemoryPool);
+    LOG_MEMORY(&simpleMemoryPool);
     EXPECT_TRUE(res);
     EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 2 * memoryBlockSize);
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 2);

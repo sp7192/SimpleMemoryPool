@@ -84,37 +84,30 @@ namespace SimpleMemoryPool
     ArrayBlock<T> SimpleFixedMemoryPool::constructArray(size_t count, Args && ... args)
     {
         ArrayBlock<T> ret;
-        if(sizeof(T) * count <= m_blockSize)
+        MemoryBlock mem = allocateMemory();
+        if(mem.ptr)
         {
-            MemoryBlock mem = allocateMemory();
-            if(mem.ptr)
+            ret.ptr = (T *)mem.ptr;
+            T * elemPtr = nullptr;
+            for(int i = 0; i < count; ++i)
             {
-                ret.ptr = (T *)mem.ptr;
-                T * elemPtr = nullptr;
-                for(int i = 0; i < count; ++i)
+                elemPtr = new (ret.ptr + i) T(std::forward<Args>(args)...);
+                if(!elemPtr)
                 {
-                    elemPtr = new (ret.ptr + i) T(std::forward<Args>(args)...);
-                    if(!elemPtr)
-                    {
-                        freeMemory(&mem);
-                        break;
-                    }
-                }
-                if(elemPtr)
-                {
-                    ret.ptr = (T *)mem.ptr;
-                    ret.count = count;
-                }
-                else
-                {
-                    ret.ptr = nullptr;
-                    ret.count = 0;
+                    freeMemory(&mem);
+                    break;
                 }
             }
-        }
-        else
-        {
-            // TODO : to be implemented
+            if(elemPtr)
+            {
+                ret.ptr = (T *)mem.ptr;
+                ret.count = count;
+            }
+            else
+            {
+                ret.ptr = nullptr;
+                ret.count = 0;
+            }
         }
         return ret;
     }
