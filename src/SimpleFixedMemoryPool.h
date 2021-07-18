@@ -54,14 +54,10 @@ namespace SimpleMemoryPool
     T * SimpleFixedMemoryPool::construct(Args && ... args)
     {
         T * ret = nullptr;
-        MemoryBlock mem = allocateMemory();
-        if(mem.ptr && mem.size >= sizeof(T))
+        MemoryBlock mem = allocateMemory(sizeof(T));
+        if(mem.ptr)
         {
             ret = new (mem.ptr) T(std::forward<Args>(args)...);
-        }
-        else if(mem.ptr)
-        {
-            freeMemory(&mem);
         }
         return ret;
     }
@@ -73,9 +69,9 @@ namespace SimpleMemoryPool
         if(*ptr)
         {
             (*ptr)->~T();
-            MemoryBlock memoryBlock((unsigned char *)(*ptr), m_blockSize);
+            MemoryBlock memoryBlock((unsigned char *)(*ptr), sizeof(T));
             ret = freeMemory(&memoryBlock);
-            *ptr = (T *)memoryBlock.ptr;
+            *ptr = reinterpret_cast<T *>(memoryBlock.ptr);
         }
         return ret;
     }
@@ -87,7 +83,7 @@ namespace SimpleMemoryPool
         MemoryBlock mem = allocateMemory();
         if(mem.ptr)
         {
-            ret.ptr = (T *)mem.ptr;
+            ret.ptr = reinterpret_cast<T *>(mem.ptr);
             T * elemPtr = nullptr;
             for(int i = 0; i < count; ++i)
             {
@@ -100,7 +96,7 @@ namespace SimpleMemoryPool
             }
             if(elemPtr)
             {
-                ret.ptr = (T *)mem.ptr;
+                ret.ptr = reinterpret_cast<T *>(mem.ptr);
                 ret.count = count;
             }
             else
@@ -124,7 +120,7 @@ namespace SimpleMemoryPool
             }
             MemoryBlock memoryBlock((unsigned char *)(array->ptr), m_blockSize);
             ret = freeMemory(&memoryBlock);
-            array->ptr = (T *)memoryBlock.ptr;
+            array->ptr = reinterpret_cast<T *>(memoryBlock.ptr);
             array->count = 0;
         }
         return ret;

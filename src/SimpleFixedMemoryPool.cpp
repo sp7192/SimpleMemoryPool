@@ -35,7 +35,7 @@ namespace SimpleMemoryPool
         m_blocksInfo = new MemoryBlockInfo[m_blocksCount];
         for(int i = 0; i < m_blocksCount; ++i)
         {
-            m_blocksInfo[i].memoryBlock.ptr = (unsigned char *)m_startBlockPtr + i * m_blockSize;
+            m_blocksInfo[i].memoryBlock.ptr = reinterpret_cast<unsigned char *>(m_startBlockPtr) + i * m_blockSize;
             m_blocksInfo[i].memoryBlock.size = m_blockSize;
             m_blocksInfo[i].isUsed = false;
         }
@@ -122,16 +122,16 @@ namespace SimpleMemoryPool
             });
             if(it != endPtr)
             {
-                size_t blockCount = memoryBlock->size / m_blockSize;
-                while(it != (it + blockCount))
+                size_t blockCount = (memoryBlock->size + m_blockSize -1 )/ m_blockSize;
+                size_t ind = std::distance(m_blocksInfo, it);
+                for(size_t i = 0; i < blockCount; ++i)
                 {
                     m_usedSize -= m_blockSize;
-                    it->isUsed = false;
+                    m_blocksInfo[i + ind].isUsed = false;
                     memset(memoryBlock->ptr, 0, memoryBlock->size);
                     memoryBlock->ptr = nullptr;
                     memoryBlock->size = 0;
                     ++m_freeBlocksCount;
-                    ++it;
                 }
                 ret = true;
             }
