@@ -80,7 +80,7 @@ namespace SimpleMemoryPool
     ArrayBlock<T> SimpleFixedMemoryPool::constructArray(size_t count, Args && ... args)
     {
         ArrayBlock<T> ret;
-        MemoryBlock mem = allocateMemory();
+        MemoryBlock mem = allocateMemory(sizeof(T) * count);
         if(mem.ptr)
         {
             ret.ptr = reinterpret_cast<T *>(mem.ptr);
@@ -118,7 +118,7 @@ namespace SimpleMemoryPool
             {
                 (*array)[i].~T();
             }
-            MemoryBlock memoryBlock((unsigned char *)(array->ptr), m_blockSize);
+            MemoryBlock memoryBlock((unsigned char *)(array->ptr), array->count * sizeof(T));
             ret = freeMemory(&memoryBlock);
             array->ptr = reinterpret_cast<T *>(memoryBlock.ptr);
             array->count = 0;

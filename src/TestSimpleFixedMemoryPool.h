@@ -316,7 +316,6 @@ TEST(SMP_ConstructArray, SuccessfulConstructArrayInOneBlock)
     size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
 
     smp::ArrayBlock points = simpleMemoryPool.constructArray<Point>(10, 0.0f, 0.0f);
-    printf("points count : %zd\n", points.count);
     ASSERT_TRUE(points.ptr);
     EXPECT_EQ(points.count, 10);
     for(size_t i = 0; i < points.count; ++i)
@@ -334,6 +333,22 @@ TEST(SMP_ConstructArray, SuccessfulConstructArrayInOneBlock)
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 1);
 }
 
+TEST(SMP_ConstructArray, SuccessfulConstructArray)
+{
+    const size_t totalMemorySize = 64;
+    const size_t memoryBlockSize = 16;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+
+    smp::ArrayBlock points = simpleMemoryPool.constructArray<Point>(4, 0.0f, 0.0f);
+    ASSERT_TRUE(points.ptr);
+    EXPECT_EQ(points.count, 4);
+
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 2 * memoryBlockSize);
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 2);
+    EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 2);
+}
+
 TEST(SMP_DestructArray, SuccessfulDestructArrayInOneBlock)
 {
     const size_t totalMemorySize = 1024 * 1024;
@@ -348,5 +363,30 @@ TEST(SMP_DestructArray, SuccessfulDestructArrayInOneBlock)
     bool res = simpleMemoryPool.destructArray(&points);
     EXPECT_TRUE(res);
     EXPECT_FALSE(points.ptr);
+}
+
+TEST(SMP_DestructArray, SuccessfulDestructArray)
+{
+    const size_t totalMemorySize = 64;
+    const size_t memoryBlockSize = 16;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+
+    smp::ArrayBlock points = simpleMemoryPool.constructArray<Point>(4, 0.0f, 0.0f);
+    ASSERT_TRUE(points.ptr);
+    EXPECT_EQ(points.count, 4);
+
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 2 * memoryBlockSize);
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 2);
+    EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 2);
+
+    bool res = simpleMemoryPool.destructArray(&points);
+    EXPECT_TRUE(res);
+    EXPECT_FALSE(points.ptr);
+
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 0);
+    EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount);
+    EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 0);
+
 }
 
