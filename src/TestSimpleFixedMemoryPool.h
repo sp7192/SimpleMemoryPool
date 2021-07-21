@@ -4,19 +4,9 @@
 
 namespace smp = SimpleMemoryPool;
 
-void logMemory(const smp::SimpleFixedMemoryPool * mem, int line)
-{
-    if(mem)
-    {
-        printf("================\n");
-        printf("Line %d : Total Memory size : %zu, usedSize Mem : %zu\n", line, mem->getMemoryTotalSize(), mem->getMemoryUsedSize());
-        printf("Line %d : Total chuncks : %zu, usedSize chuncks : %zu\n", line, mem->getMemoryBlocksCount(),
-               mem->getMemoryBlocksCount() - mem->getFreeMemoryBlocksCount());
-        printf("================\n");
-    }
-}
-
-//#define LOG_MEMORY(mem) do { logMemory(mem, __LINE__);} while(0)
+#define LOG_MEMORY(MEM) do { printf("in line %d\n", __LINE__);\
+                              (MEM).logMemory();  \
+                            } while(0)
 
 struct Point
 {
@@ -185,7 +175,6 @@ TEST(SMP_Free, SuccessfulFreeMemory)
     const size_t memoryBlockSize = 256;
     smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize);
     size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
-
     smp::MemoryBlock mem = simpleMemoryPool.allocateMemory();
     smp::MemoryBlock mem2 = simpleMemoryPool.allocateMemory();
     smp::MemoryBlock mem3 = simpleMemoryPool.allocateMemory();
@@ -340,7 +329,9 @@ TEST(SMP_ConstructArray, SuccessfulConstructArray)
     smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize);
     size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
 
+    LOG_MEMORY(simpleMemoryPool);
     smp::ArrayBlock points = simpleMemoryPool.constructArray<Point>(4, 0.0f, 0.0f);
+    LOG_MEMORY(simpleMemoryPool);
     ASSERT_TRUE(points.ptr);
     EXPECT_EQ(points.count, 4);
 
@@ -372,15 +363,19 @@ TEST(SMP_DestructArray, SuccessfulDestructArray)
     smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize);
     size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
 
+    LOG_MEMORY(simpleMemoryPool);
     smp::ArrayBlock points = simpleMemoryPool.constructArray<Point>(4, 0.0f, 0.0f);
     ASSERT_TRUE(points.ptr);
     EXPECT_EQ(points.count, 4);
+    LOG_MEMORY(simpleMemoryPool);
 
     EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 2 * memoryBlockSize);
     EXPECT_EQ(simpleMemoryPool.getFreeMemoryBlocksCount(), memoryBlockCount - 2);
     EXPECT_EQ(simpleMemoryPool.getUsedMemoryBlocksCount(), 2);
 
     bool res = simpleMemoryPool.destructArray(&points);
+    LOG_MEMORY(simpleMemoryPool);
+
     EXPECT_TRUE(res);
     EXPECT_FALSE(points.ptr);
 

@@ -48,6 +48,8 @@ namespace SimpleMemoryPool
         size_t getMemoryBlocksCount() const;
         size_t getFreeMemoryBlocksCount() const;
         size_t getUsedMemoryBlocksCount() const;
+
+        void logMemory() const;
     };
 
     template<typename T, class ... Args>

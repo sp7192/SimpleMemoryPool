@@ -168,5 +168,30 @@ namespace SimpleMemoryPool
     {
         return m_blocksCount - m_freeBlocksCount;
     }
+
+    void SimpleFixedMemoryPool::logMemory() const
+    {
+        printf("================\n");
+        printf("Total Memory size : %zu, usedSize Mem : %zu\n", getMemoryTotalSize(), getMemoryUsedSize());
+        printf("Total Memory Blocks Count : %zu, Used Memory Blocks Count : %zu,"
+                "Free Memory Blocks Count : %zu\n", getMemoryBlocksCount(),
+               getMemoryBlocksCount() - getFreeMemoryBlocksCount(), getFreeMemoryBlocksCount());
+        printf("================\n");
+        
+        for(int i = 0; i < getMemoryBlocksCount(); ++i)
+        {
+            char buffer[8192] = { 0 };
+            int offset = 0;
+            while(offset < sizeof(buffer) && i < getMemoryBlocksCount())
+            {
+                offset += snprintf(offset + buffer, sizeof(buffer) - offset,
+                                   "Block[%d] = %s; ptr : %p\n", i, m_blocksInfo[i].isUsed ? "USED" : "FREE",
+                                   m_blocksInfo[i].isUsed ? m_blocksInfo[i].memoryBlock.ptr : nullptr);
+                ++i;
+            }
+            --i;
+            printf("%s\n", buffer);
+        }
+    }
 }
 
