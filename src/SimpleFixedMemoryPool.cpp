@@ -9,14 +9,15 @@ namespace SimpleMemoryPool
     {
         MemoryBlock memoryBlock;
         bool        isUsed;
+        long long   id;
 
-        MemoryBlockInfo() : memoryBlock(), isUsed(false)
+        MemoryBlockInfo() : memoryBlock(), isUsed(false), id(0)
         {}
     };
 
     SimpleFixedMemoryPool::SimpleFixedMemoryPool(size_t totalSize, size_t blockSize)
         : m_totalSize(totalSize), m_usedSize(0), m_blockSize(blockSize),
-        m_blocksInfo(nullptr), m_startBlockPtr(nullptr)
+        m_blocksInfo(nullptr), m_startBlockPtr(nullptr), m_lastBlockId(0)
     {
         try
         {
@@ -66,6 +67,7 @@ namespace SimpleMemoryPool
                 {
                     ret = m_blocksInfo[i].memoryBlock;
                     m_blocksInfo[i].isUsed = true;
+                    m_blocksInfo[i].id = ++m_lastBlockId;
                     m_usedSize += m_blockSize;
                     m_freeBlocksCount--;
                     break;
@@ -98,8 +100,10 @@ namespace SimpleMemoryPool
                 {
                     ret = m_blocksInfo[i].memoryBlock;
                     ret.size = m_blockSize * blocksCount;
-                    std::for_each(beginPtr, endPtr, [](MemoryBlockInfo & memInfo) {
+                    ++m_lastBlockId;
+                    std::for_each(beginPtr, endPtr, [this](MemoryBlockInfo & memInfo) {
                         memInfo.isUsed = true;
+                        memInfo.id = m_lastBlockId;
                     });
                     m_usedSize += ret.size;
                     m_freeBlocksCount -= blocksCount;
@@ -114,25 +118,28 @@ namespace SimpleMemoryPool
     bool SimpleFixedMemoryPool::freeMemory(MemoryBlock * memoryBlock)
     {
         bool ret = false;
+        auto endPtr = m_blocksInfo + m_blocksCount;
         if(memoryBlock && memoryBlock->ptr && m_freeBlocksCount != m_blocksCount)
         {
-            auto endPtr = m_blocksInfo + m_blocksCount;
-            auto it = std::find_if(m_blocksInfo, endPtr, [memoryBlock] (MemoryBlockInfo & memInfo) {
+            auto firstItemIter = std::find_if(m_blocksInfo, endPtr, [memoryBlock] (MemoryBlockInfo & memInfo) {
                 return memInfo.isUsed && memInfo.memoryBlock.ptr == memoryBlock->ptr;
             });
-            if(it != endPtr)
+            if(firstItemIter != endPtr)
             {
-                size_t blockCount = (memoryBlock->size + m_blockSize -1 )/ m_blockSize;
-                size_t ind = std::distance(m_blocksInfo, it);
-                for(size_t i = 0; i < blockCount; ++i)
-                {
+                auto endItemIter = std::find_if(firstItemIter, endPtr, [firstItemIter](MemoryBlockInfo & memInfo) {
+                    return memInfo.id != firstItemIter->id;
+                });
+                std::for_each(firstItemIter, endItemIter,[&](MemoryBlockInfo & memInfo) {
                     m_usedSize -= m_blockSize;
-                    m_blocksInfo[i + ind].isUsed = false;
-                    memset(memoryBlock->ptr, 0, memoryBlock->size);
-                    memoryBlock->ptr = nullptr;
-                    memoryBlock->size = 0;
+                    memInfo.isUsed = false;
+                    memInfo.id = 0;
                     ++m_freeBlocksCount;
-                }
+                });
+
+                memset(memoryBlock->ptr, 0, memoryBlock->size);
+                memoryBlock->ptr = nullptr;
+                memoryBlock->size = 0;
+
                 ret = true;
             }
         }
@@ -185,7 +192,7 @@ namespace SimpleMemoryPool
             while(offset < sizeof(buffer) && i < getMemoryBlocksCount())
             {
                 offset += snprintf(offset + buffer, sizeof(buffer) - offset,
-                                   "Block[%d] = %s; ptr : %p\n", i, m_blocksInfo[i].isUsed ? "USED" : "FREE",
+                                   "Block[%d] = %s; id = %zu; ptr = %p\n", i, m_blocksInfo[i].isUsed ? "USED" : "FREE", m_blocksInfo[i].id,
                                    m_blocksInfo[i].isUsed ? m_blocksInfo[i].memoryBlock.ptr : nullptr);
                 ++i;
             }

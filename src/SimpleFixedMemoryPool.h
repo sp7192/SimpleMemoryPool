@@ -14,8 +14,8 @@ namespace SimpleMemoryPool
         size_t            m_blockSize;
         size_t            m_freeBlocksCount;
         size_t            m_blocksCount;
+        size_t            m_lastBlockId;
         void *            m_startBlockPtr;
-
         struct MemoryBlockInfo;
         MemoryBlockInfo * m_blocksInfo;
 
