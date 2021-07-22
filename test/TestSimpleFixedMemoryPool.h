@@ -1,11 +1,11 @@
 #include <cstdio>
-#include "SimpleFixedMemoryPool.h"
+#include "../src/SimpleFixedMemoryPool.h"
 #include "gtest/gtest.h"
 
 namespace smp = SimpleMemoryPool;
 
 #define LOG_MEMORY(MEM) do { printf("in line %d\n", __LINE__);\
-                              (MEM).logMemory();  \
+                              (MEM).logMemory();\
                             } while(0)
 
 struct Point
