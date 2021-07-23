@@ -18,6 +18,7 @@ add_subdirectory("${CMAKE_BINARY_DIR}/test/googletest-src"
 
 include_directories("${gtest_SOURCE_DIR}/include"
                     "${gmock_SOURCE_DIR}/include"
+					"../src"
 )
 
 enable_testing()

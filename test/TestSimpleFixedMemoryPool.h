@@ -1,5 +1,5 @@
 #include <cstdio>
-#include "../src/SimpleFixedMemoryPool.h"
+#include "SimpleFixedMemoryPool.h"
 #include "gtest/gtest.h"
 
 namespace smp = SimpleMemoryPool;

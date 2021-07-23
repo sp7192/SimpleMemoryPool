@@ -126,16 +126,21 @@ namespace SimpleMemoryPool
             });
             if(firstItemIter != endPtr)
             {
-                auto endItemIter = std::find_if(firstItemIter, endPtr, [firstItemIter](MemoryBlockInfo & memInfo) {
-                    return memInfo.id != firstItemIter->id;
+                auto id = firstItemIter->id;
+                std::for_each(firstItemIter, endPtr, [&](MemoryBlockInfo & memInfo) {
+                    if (memInfo.id == id)
+                    {
+                        m_usedSize -= m_blockSize;
+                        memInfo.isUsed = false;
+                        memInfo.id = 0;
+                        ++m_freeBlocksCount;
+                    }
+                    else
+                    {
+                        return;
+                    }
                 });
-                std::for_each(firstItemIter, endItemIter,[&](MemoryBlockInfo & memInfo) {
-                    m_usedSize -= m_blockSize;
-                    memInfo.isUsed = false;
-                    memInfo.id = 0;
-                    ++m_freeBlocksCount;
-                });
-
+                
                 memset(memoryBlock->ptr, 0, memoryBlock->size);
                 memoryBlock->ptr = nullptr;
                 memoryBlock->size = 0;
