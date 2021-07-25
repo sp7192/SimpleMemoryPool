@@ -15,9 +15,10 @@ namespace SimpleMemoryPool
         {}
     };
 
-    SimpleFixedMemoryPool::SimpleFixedMemoryPool(size_t totalSize, size_t blockSize)
+    SimpleFixedMemoryPool::SimpleFixedMemoryPool(size_t totalSize, size_t blockSize, MemoryDistributionPolicy distributionPolicy)
         : m_totalSize(totalSize), m_usedSize(0), m_blockSize(blockSize),
-        m_blocksInfo(nullptr), m_startBlockPtr(nullptr), m_lastBlockId(0)
+        m_blocksInfo(nullptr), m_startBlockPtr(nullptr), m_lastBlockId(0),
+        m_distributionPolicy(distributionPolicy)
     {
         try
         {
@@ -84,6 +85,11 @@ namespace SimpleMemoryPool
         if(m_freeBlocksCount >= blocksCount)
         {
             size_t i = 0;
+            if(MemoryDistributionPolicy::None != m_distributionPolicy)
+            {
+                i = (m_blocksCount /4) * (blocksCount / (m_blocksCount / 4));
+            }
+
             while(i < m_blocksCount && (blocksCount <= (m_blocksCount - i)))
             {
                 bool hasFreeBlocks = false;
