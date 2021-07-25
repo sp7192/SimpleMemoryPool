@@ -10,8 +10,8 @@ namespace SimpleMemoryPool
     enum class MemoryDistributionPolicy
     {
         None,
-        FourCloseRanges,
-        FourOpenRanges
+        CloseRanges,
+        OpenRanges
     };
 
     class SimpleFixedMemoryPool
@@ -23,13 +23,15 @@ namespace SimpleMemoryPool
         size_t                      m_blocksCount;
         size_t                      m_lastBlockId;
         void *                      m_startBlockPtr;
+        size_t                      m_distributedBlocksCount;
         MemoryDistributionPolicy    m_distributionPolicy;
 
         struct MemoryBlockInfo;
         MemoryBlockInfo * m_blocksInfo;
 
     public:
-        SimpleFixedMemoryPool(size_t totalSize, size_t chunckSize, MemoryDistributionPolicy distributionPolicy = MemoryDistributionPolicy::None);
+        SimpleFixedMemoryPool(size_t totalSize, size_t chunckSize,
+                              size_t distributedCount = 1, MemoryDistributionPolicy distributionPolicy = MemoryDistributionPolicy::None);
         ~SimpleFixedMemoryPool();
 
         SimpleFixedMemoryPool(const SimpleFixedMemoryPool &) = delete;

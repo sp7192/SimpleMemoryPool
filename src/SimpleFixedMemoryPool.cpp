@@ -15,10 +15,11 @@ namespace SimpleMemoryPool
         {}
     };
 
-    SimpleFixedMemoryPool::SimpleFixedMemoryPool(size_t totalSize, size_t blockSize, MemoryDistributionPolicy distributionPolicy)
+    SimpleFixedMemoryPool::SimpleFixedMemoryPool(size_t totalSize, size_t blockSize,
+                                                 size_t distributedCount, MemoryDistributionPolicy distributionPolicy)
         : m_totalSize(totalSize), m_usedSize(0), m_blockSize(blockSize),
         m_blocksInfo(nullptr), m_startBlockPtr(nullptr), m_lastBlockId(0),
-        m_distributionPolicy(distributionPolicy)
+        m_distributedBlocksCount(distributedCount), m_distributionPolicy(distributionPolicy)
     {
         try
         {
@@ -32,6 +33,10 @@ namespace SimpleMemoryPool
         if(m_blockSize > m_totalSize)
         {
             m_blockSize = m_totalSize;
+        }
+        if(0 == m_distributedBlocksCount)
+        {
+            m_distributedBlocksCount = 1;
         }
         m_blocksCount = m_freeBlocksCount = m_blockSize > 0 ? m_totalSize / m_blockSize : 0;
         m_blocksInfo = new MemoryBlockInfo[m_blocksCount];
@@ -81,38 +86,40 @@ namespace SimpleMemoryPool
     MemoryBlock SimpleFixedMemoryPool::allocateMemory(size_t size)
     {
         MemoryBlock ret;
-        size_t blocksCount = (size + m_blockSize - 1) / m_blockSize;
-        if(m_freeBlocksCount >= blocksCount)
+        size_t requestedBlocksCount = (size + m_blockSize - 1) / m_blockSize;
+        if(m_freeBlocksCount >= requestedBlocksCount)
         {
             size_t i = 0;
+            size_t blocksCount = m_blocksCount;
             if(MemoryDistributionPolicy::None != m_distributionPolicy)
             {
-                i = (m_blocksCount /4) * (blocksCount / (m_blocksCount / 4));
+                i = (m_blocksCount /m_distributedBlocksCount) * (requestedBlocksCount / (m_blocksCount / m_distributedBlocksCount));
+                if(MemoryDistributionPolicy::CloseRanges == m_distributionPolicy)
+                {
+                    blocksCount = (m_blocksCount / m_distributedBlocksCount) *
+                                   ( 1 + (requestedBlocksCount / (m_blocksCount / m_distributedBlocksCount)));
+                }
             }
-
-            while(i < m_blocksCount && (blocksCount <= (m_blocksCount - i)))
+            while(i < blocksCount && (requestedBlocksCount <= (m_blocksCount - i)))
             {
                 bool hasFreeBlocks = false;
                 auto beginPtr = m_blocksInfo + i;
-                auto endPtr = m_blocksInfo + i + blocksCount;
-                if(i < m_blocksCount)
-                {
-                    auto it = std::find_if(beginPtr, endPtr, [](MemoryBlockInfo & memInfo){
-                        return memInfo.isUsed;
-                    });
-                    hasFreeBlocks = (it == endPtr);
-                }
+                auto endPtr = m_blocksInfo + i + requestedBlocksCount;
+                auto it = std::find_if(beginPtr, endPtr, [](MemoryBlockInfo & memInfo) {
+                    return memInfo.isUsed;
+                });
+                hasFreeBlocks = (it == endPtr);
                 if(hasFreeBlocks)
                 {
                     ret = m_blocksInfo[i].memoryBlock;
-                    ret.size = m_blockSize * blocksCount;
+                    ret.size = m_blockSize * requestedBlocksCount;
                     ++m_lastBlockId;
                     std::for_each(beginPtr, endPtr, [this](MemoryBlockInfo & memInfo) {
                         memInfo.isUsed = true;
                         memInfo.id = m_lastBlockId;
                     });
                     m_usedSize += ret.size;
-                    m_freeBlocksCount -= blocksCount;
+                    m_freeBlocksCount -= requestedBlocksCount;
                     break;
                 }
                 ++i;
