@@ -87,7 +87,8 @@ namespace SimpleMemoryPool
     {
         MemoryBlock ret;
         size_t requestedBlocksCount = (size + m_blockSize - 1) / m_blockSize;
-        if(m_freeBlocksCount >= requestedBlocksCount)
+        if(m_freeBlocksCount >= requestedBlocksCount &&
+            (MemoryDistributionPolicy::None == m_distributionPolicy || m_blocksCount/ m_distributedBlocksCount >= requestedBlocksCount))
         {
             size_t i = 0;
             size_t blocksCount = m_blocksCount;
