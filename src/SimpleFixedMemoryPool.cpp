@@ -62,6 +62,12 @@ namespace SimpleMemoryPool
         }
     }
 
+    size_t SimpleFixedMemoryPool::computeStartingAllocationIndex(size_t requestedBlocksCount) const
+    {
+        size_t distributedBlocksSize = m_blocksCount / m_distributedBlocksCount;
+        return distributedBlocksSize * ((requestedBlocksCount - 1) / (distributedBlocksSize / m_distributedBlocksCount));
+    }
+
     MemoryBlock SimpleFixedMemoryPool::allocateMemory()
     {
         MemoryBlock ret;
@@ -87,21 +93,16 @@ namespace SimpleMemoryPool
     {
         MemoryBlock ret;
         size_t requestedBlocksCount = (size + m_blockSize - 1) / m_blockSize;
+
         if(m_freeBlocksCount >= requestedBlocksCount &&
             (MemoryDistributionPolicy::None == m_distributionPolicy || m_blocksCount/ m_distributedBlocksCount >= requestedBlocksCount))
         {
             size_t i = 0;
-            size_t blocksCount = m_blocksCount;
             if(MemoryDistributionPolicy::None != m_distributionPolicy)
             {
-                i = (m_blocksCount /m_distributedBlocksCount) * (requestedBlocksCount / (m_blocksCount / m_distributedBlocksCount));
-                if(MemoryDistributionPolicy::CloseRanges == m_distributionPolicy)
-                {
-                    blocksCount = (m_blocksCount / m_distributedBlocksCount) *
-                                   ( 1 + (requestedBlocksCount / (m_blocksCount / m_distributedBlocksCount)));
-                }
+                i = computeStartingAllocationIndex(requestedBlocksCount);
             }
-            while(i < blocksCount && (requestedBlocksCount <= (m_blocksCount - i)))
+            while(i < m_blocksCount && (requestedBlocksCount <= (m_blocksCount - i)))
             {
                 bool hasFreeBlocks = false;
                 auto beginPtr = m_blocksInfo + i;

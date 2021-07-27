@@ -391,23 +391,32 @@ TEST(SMP_Policy, SUCCESSFUL_ALLOCATE_RANGES_POLICY)
     smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize, 2, smp::MemoryDistributionPolicy::CloseRanges);
     size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
 
-    auto mem1 = simpleMemoryPool.allocateMemory(256);
+    auto mem1 = simpleMemoryPool.allocateMemory(64);
     auto mem2 = simpleMemoryPool.allocateMemory(500);
-    auto mem3 = simpleMemoryPool.allocateMemory(256);
+    auto mem3 = simpleMemoryPool.allocateMemory(64);
+
     EXPECT_TRUE(mem1.ptr);
     EXPECT_TRUE(mem2.ptr);
     EXPECT_TRUE(mem3.ptr);
-    simpleMemoryPool.logMemory();
 
     simpleMemoryPool.freeMemory(&mem1);
     simpleMemoryPool.freeMemory(&mem3);
 
-    auto mem4 = simpleMemoryPool.allocateMemory(256);
-    auto mem5 = simpleMemoryPool.allocateMemory(256);
+    auto mem4 = simpleMemoryPool.allocateMemory(64);
+    auto mem5 = simpleMemoryPool.allocateMemory(64);
     EXPECT_TRUE(mem4.ptr);
     EXPECT_TRUE(mem5.ptr);
-    simpleMemoryPool.logMemory();
+}
 
+TEST(SMP_Policy, SUCCESSFUL_ALLOCATE_RANGES_POLICY2)
+{
+    const size_t memoryBlockSize = 16;
+    const size_t totalMemorySize = memoryBlockSize * 1024;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize, 4, smp::MemoryDistributionPolicy::CloseRanges);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+
+    auto mem1 = simpleMemoryPool.allocateMemory(250 * memoryBlockSize);
+    EXPECT_TRUE(mem1.ptr);
 }
 
 TEST(SMP_Policy, UNSUCCESSFUL_ALLOCATE_RANGES_POLICY)

@@ -29,6 +29,7 @@ namespace SimpleMemoryPool
         struct MemoryBlockInfo;
         MemoryBlockInfo * m_blocksInfo;
 
+        size_t computeStartingAllocationIndex(size_t requestedBlocksCount) const;
     public:
         SimpleFixedMemoryPool(size_t totalSize, size_t chunckSize,
                               size_t distributedCount = 1, MemoryDistributionPolicy distributionPolicy = MemoryDistributionPolicy::None);
