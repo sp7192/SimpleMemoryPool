@@ -98,11 +98,16 @@ namespace SimpleMemoryPool
             (MemoryDistributionPolicy::None == m_distributionPolicy || m_blocksCount/ m_distributedBlocksCount >= requestedBlocksCount))
         {
             size_t i = 0;
+            size_t blocksCount = m_blocksCount;
             if(MemoryDistributionPolicy::None != m_distributionPolicy)
             {
                 i = computeStartingAllocationIndex(requestedBlocksCount);
             }
-            while(i < m_blocksCount && (requestedBlocksCount <= (m_blocksCount - i)))
+            if(MemoryDistributionPolicy::CloseRanges == m_distributionPolicy)
+            {
+                blocksCount = i + (m_blocksCount /  m_distributedBlocksCount);
+            }
+            while(i < blocksCount && (requestedBlocksCount <= (blocksCount - i)))
             {
                 bool hasFreeBlocks = false;
                 auto beginPtr = m_blocksInfo + i;
