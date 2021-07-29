@@ -25,10 +25,10 @@ enable_testing()
 
 add_executable (SimpleMemoryPool 
 				"main.cpp" 
-				"../src/SimpleFixedMemoryPool.cpp"
-				"../src/SimpleFixedMemoryPool.h"
+				"SimpleFixedMemoryPool.cpp"
+				"SimpleFixedMemoryPool.h"
 				"TestSimpleFixedMemoryPool.h"
-				"../src/MemoryBlock.h"
+				"MemoryBlock.h"
 ) 
 
 target_link_libraries(
