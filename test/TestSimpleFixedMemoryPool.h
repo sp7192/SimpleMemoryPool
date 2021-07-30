@@ -1,6 +1,8 @@
 #include <cstdio>
 #include "SimpleFixedMemoryPool.h"
+#include "SMPString.h"
 #include "gtest/gtest.h"
+#include <cstring>
 
 namespace smp = SimpleMemoryPool;
 
@@ -457,7 +459,6 @@ TEST(SMP_Policy, SUCCESSFUL_ALLOCATE_OPENRANGES_POLICY2)
     EXPECT_TRUE(mem5.ptr);
 }
 
-
 TEST(SMP_Policy, UNSUCCESSFUL_ALLOCATE_RANGES_POLICY)
 {
     const size_t totalMemorySize = 1024;
@@ -468,4 +469,15 @@ TEST(SMP_Policy, UNSUCCESSFUL_ALLOCATE_RANGES_POLICY)
     auto mem = simpleMemoryPool.allocateMemory(300);
     EXPECT_FALSE(mem.ptr);
     EXPECT_EQ(mem.size, 0);
+}
+
+TEST(SMP_STRING, SUCCESSFUL_STRING_CONSTRUCTION)
+{
+    const size_t totalMemorySize = 1024*1024;
+    const size_t memoryBlockSize = 16;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize, 4, smp::MemoryDistributionPolicy::CloseRanges);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+
+    auto str = smp::SMPString(&simpleMemoryPool, "Sina");
+    EXPECT_EQ(strcmp(str.getBuffer(), "Sina"), 0);
 }
