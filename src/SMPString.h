@@ -7,6 +7,7 @@ namespace SimpleMemoryPool
     {
         MemoryBlock             m_buffer;
         const size_t            m_defaultBufferSize = 32;
+        size_t                  m_stringSize = 0;
         SimpleFixedMemoryPool * m_memoryPool = nullptr;
 
     public :
@@ -21,5 +22,7 @@ namespace SimpleMemoryPool
 
         // TODO : Maybe changing method name.
         char const * getBuffer() const;
+        size_t getBufferSize() const;
+        size_t getStringSize() const;
     };
 }

@@ -480,4 +480,6 @@ TEST(SMP_STRING, SUCCESSFUL_STRING_CONSTRUCTION)
 
     auto str = smp::SMPString(&simpleMemoryPool, "Sina");
     EXPECT_EQ(strcmp(str.getBuffer(), "Sina"), 0);
+    EXPECT_EQ(str.getStringSize(), 4);
+    EXPECT_EQ(str.getBufferSize(), memoryBlockSize);
 }
