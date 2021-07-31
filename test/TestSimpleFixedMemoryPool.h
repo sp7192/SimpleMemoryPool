@@ -471,6 +471,20 @@ TEST(SMP_Policy, UNSUCCESSFUL_ALLOCATE_RANGES_POLICY)
     EXPECT_EQ(mem.size, 0);
 }
 
+TEST(SMP_STRING, SUCCESSFUL_STRING_DEFAULT_CONSTRUCTION)
+{
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 16;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize, 4, smp::MemoryDistributionPolicy::CloseRanges);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+
+    auto str = smp::SMPString(&simpleMemoryPool);
+    EXPECT_EQ(strcmp(str.getBuffer(), ""), 0);
+    EXPECT_EQ(str.getStringSize(), 0);
+    EXPECT_EQ(str.getBufferSize(), 32);
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 2 * memoryBlockSize);
+}
+
 TEST(SMP_STRING, SUCCESSFUL_STRING_CONSTRUCTION)
 {
     const size_t totalMemorySize = 1024*1024;
@@ -482,4 +496,65 @@ TEST(SMP_STRING, SUCCESSFUL_STRING_CONSTRUCTION)
     EXPECT_EQ(strcmp(str.getBuffer(), "Sina"), 0);
     EXPECT_EQ(str.getStringSize(), 4);
     EXPECT_EQ(str.getBufferSize(), memoryBlockSize);
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), memoryBlockSize);
+}
+
+TEST(SMP_STRING, SUCCESSFUL_STRING_COPY_CONSTRUCTION)
+{
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 16;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize, 4, smp::MemoryDistributionPolicy::CloseRanges);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+
+    auto str = smp::SMPString(&simpleMemoryPool, "Sina");
+    smp::SMPString str2 = str;
+    EXPECT_EQ(strcmp(str2.getBuffer(), "Sina"), 0);
+    EXPECT_EQ(str2.getStringSize(), 4);
+    EXPECT_EQ(str2.getBufferSize(), memoryBlockSize);
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), 2 * memoryBlockSize);
+}
+
+TEST(SMP_STRING, SUCCESSFUL_STRING_COPY_ASSIGNMENT)
+{
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 16;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize, 4, smp::MemoryDistributionPolicy::CloseRanges);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+
+    auto str = smp::SMPString(&simpleMemoryPool, "Sina");
+    auto str2 = smp::SMPString(&simpleMemoryPool, "Mina");
+    str2 = str;
+    EXPECT_EQ(strcmp(str2.getBuffer(), "Sina"), 0);
+    EXPECT_EQ(str2.getStringSize(), 4);
+    EXPECT_EQ(str2.getBufferSize(), memoryBlockSize);
+}
+
+TEST(SMP_STRING, SUCCESSFUL_STRING_MOVE_CONSTRUCTION)
+{
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 16;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize, 4, smp::MemoryDistributionPolicy::CloseRanges);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+
+    auto str = smp::SMPString(&simpleMemoryPool, "Sina");
+    smp::SMPString str2 = std::move(str);
+    EXPECT_EQ(strcmp(str2.getBuffer(), "Sina"), 0);
+    EXPECT_EQ(str2.getStringSize(), 4);
+    EXPECT_EQ(str2.getBufferSize(), memoryBlockSize);
+    EXPECT_EQ(simpleMemoryPool.getMemoryUsedSize(), memoryBlockSize);
+}
+
+TEST(SMP_STRING, SUCCESSFUL_STRING_MOVE_ASSIGNMENT)
+{
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 16;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize, 4, smp::MemoryDistributionPolicy::CloseRanges);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+
+    auto str = smp::SMPString(&simpleMemoryPool, "Sina");
+    smp::SMPString str2(&simpleMemoryPool);
+    str2 = std::move(str);
+    EXPECT_EQ(strcmp(str2.getBuffer(), "Sina"), 0);
+    EXPECT_EQ(str2.getStringSize(), 4);
+    EXPECT_EQ(str2.getBufferSize(), memoryBlockSize);
 }
