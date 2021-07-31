@@ -20,8 +20,10 @@ namespace SimpleMemoryPool
         SMPString(const SMPString && that) noexcept;
         SMPString & operator=(const SMPString && that) noexcept;
 
+        SMPString & operator=(const char * str);
+
         // TODO : Maybe changing method name.
-        char const * getBuffer() const;
+        const char * getBuffer() const;
         size_t getBufferSize() const;
         size_t getStringSize() const;
     };

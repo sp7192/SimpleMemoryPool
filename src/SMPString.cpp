@@ -13,7 +13,7 @@ namespace SimpleMemoryPool
 
     SMPString::SMPString(SimpleFixedMemoryPool * memoryPool, const char * str) : m_buffer(), m_memoryPool(memoryPool)
     {
-        if(m_memoryPool)
+        if(m_memoryPool && str)
         {
             m_stringSize = strlen(str);
             m_buffer = m_memoryPool->allocateMemory(m_stringSize);
@@ -68,9 +68,24 @@ namespace SimpleMemoryPool
         return *this;
     }
 
-    char const * SMPString::getBuffer() const
+    SMPString & SMPString::operator=(const char * str)
     {
-        return reinterpret_cast<char const *>(m_buffer.ptr);
+        if(m_memoryPool && str)
+        {
+            if(strlen(str) > m_buffer.size)
+            {
+                m_memoryPool->freeMemory(&m_buffer);
+                m_buffer = m_memoryPool->allocateMemory(strlen(str));
+            }
+            m_stringSize = strlen(str);
+            std::strcpy(reinterpret_cast<char *>(m_buffer.ptr), str);
+        }
+        return * this;
+    }
+
+    const char * SMPString::getBuffer() const
+    {
+        return reinterpret_cast<const char *>(m_buffer.ptr);
     }
 
     size_t SMPString::getBufferSize() const
