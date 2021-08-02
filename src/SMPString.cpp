@@ -83,6 +83,16 @@ namespace SimpleMemoryPool
         return * this;
     }
 
+    char & SMPString::operator[](size_t index)
+    {
+        return reinterpret_cast<char *>(m_buffer.ptr)[index];
+    }
+
+    const char & SMPString::operator[](size_t index) const
+    {
+        return m_buffer.ptr[index];
+    }
+
     const char * SMPString::getBuffer() const
     {
         return reinterpret_cast<const char *>(m_buffer.ptr);

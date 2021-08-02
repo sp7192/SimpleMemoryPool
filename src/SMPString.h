@@ -21,6 +21,8 @@ namespace SimpleMemoryPool
         SMPString & operator=(const SMPString && that) noexcept;
 
         SMPString & operator=(const char * str);
+        char & operator[](size_t index);
+        const char & operator[](size_t index) const;
 
         // TODO : Maybe changing method name.
         const char * getBuffer() const;

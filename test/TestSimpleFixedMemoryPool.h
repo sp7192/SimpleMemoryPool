@@ -586,3 +586,16 @@ TEST(SMP_STRING, SUCCESSFUL_STRING_ASSIGNMENT_WITH_CONST_CHAR_PTR2)
     EXPECT_EQ(str.getStringSize(), 20);
     EXPECT_EQ(str.getBufferSize(), 2 * memoryBlockSize);
 }
+
+TEST(SMP_STRING, SUCCESSFUL_STRING_INDEX_OPERATOR)
+{
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 16;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize, 4, smp::MemoryDistributionPolicy::CloseRanges);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+
+    auto str = smp::SMPString(&simpleMemoryPool, "Sina");
+    EXPECT_EQ(str[0], 'S');
+    str[0] = 'M';
+    EXPECT_EQ(strcmp(str.getBuffer(), "Mina"), 0);
+}
