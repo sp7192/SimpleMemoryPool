@@ -23,7 +23,10 @@ namespace SimpleMemoryPool
         SMPString & operator=(const char * str);
         char & operator[](size_t index);
         const char & operator[](size_t index) const;
+        bool operator==(const SMPString & that);
+        bool operator==(const char * str);
 
+        SMPString & operator+=(const char * str);
         // TODO : Maybe changing method name.
         const char * getBuffer() const;
         size_t getBufferSize() const;
