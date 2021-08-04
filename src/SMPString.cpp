@@ -21,6 +21,16 @@ namespace SimpleMemoryPool
         }
     }
 
+    SMPString::SMPString(SimpleFixedMemoryPool * memoryPool, size_t strSize) : m_buffer(), m_memoryPool(memoryPool)
+    {
+        if(m_memoryPool)
+        {
+            m_stringSize = strSize;
+            m_buffer = m_memoryPool->allocateMemory(m_stringSize);
+            m_buffer.ptr[0] = '\0';
+        }
+    }
+
     SMPString::~SMPString()
     {
         if(m_memoryPool)
@@ -101,6 +111,22 @@ namespace SimpleMemoryPool
     bool SMPString::operator==(const char * str)
     {
         return (0 == strcmp(this->getBuffer(), str));
+    }
+
+    SMPString SMPString::operator+(const SMPString & that) const
+    {        
+        SMPString ret(m_memoryPool, this->getStringSize() + that.getStringSize());
+        std::strcpy(reinterpret_cast<char *>(ret.m_buffer.ptr), reinterpret_cast<char *>(m_buffer.ptr)); 
+        std::strcpy(reinterpret_cast<char *>(ret.m_buffer.ptr + m_stringSize), reinterpret_cast<char *>(that.m_buffer.ptr));
+        return ret;
+    }
+
+    SMPString SMPString::operator+(const char * str) const
+    {
+        SMPString ret(m_memoryPool, this->getStringSize() + strlen(str));
+        std::strcpy(reinterpret_cast<char *>(ret.m_buffer.ptr), reinterpret_cast<char *>(m_buffer.ptr));
+        std::strcpy(reinterpret_cast<char *>(ret.m_buffer.ptr + m_stringSize), str);
+        return ret;
     }
 
     SMPString & SMPString::operator+=(const char * str)

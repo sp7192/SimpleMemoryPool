@@ -13,6 +13,7 @@ namespace SimpleMemoryPool
     public :
         SMPString(SimpleFixedMemoryPool * memoryPool);
         SMPString(SimpleFixedMemoryPool * memoryPool, const char * str);
+        SMPString(SimpleFixedMemoryPool * memoryPool, size_t strSize);
         ~SMPString();
 
         SMPString(const SMPString & that);
@@ -25,7 +26,8 @@ namespace SimpleMemoryPool
         const char & operator[](size_t index) const;
         bool operator==(const SMPString & that);
         bool operator==(const char * str);
-
+        SMPString operator+(const SMPString & that) const;
+        SMPString operator+(const char * str) const;
         SMPString & operator+=(const char * str);
         // TODO : Maybe changing method name.
         const char * getBuffer() const;
