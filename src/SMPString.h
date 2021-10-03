@@ -29,6 +29,7 @@ namespace SimpleMemoryPool
         SMPString operator+(const SMPString & that) const;
         SMPString operator+(const char * str) const;
         SMPString & operator+=(const char * str);
+        SMPString & operator+=(const SMPString & that);
         // TODO : Maybe changing method name.
         const char * getBuffer() const;
         size_t getBufferSize() const;

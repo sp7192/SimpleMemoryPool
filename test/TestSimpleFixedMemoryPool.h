@@ -704,3 +704,33 @@ TEST(SMP_STRING, SUCCESSFUL_STRING_INCREMENT_OPERATOR2)
     EXPECT_EQ(str.getStringSize(), 24);
     EXPECT_EQ(str.getBufferSize(), 2 * memoryBlockSize);
 }
+
+TEST(SMP_STRING, SUCCESSFUL_STRING_INCREMENT_OPERATOR3)
+{
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 16;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize, 4, smp::MemoryDistributionPolicy::CloseRanges);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+
+    auto str  = smp::SMPString(&simpleMemoryPool, "Sina");
+    auto str2 = smp::SMPString(&simpleMemoryPool, "GG");
+    str += str2;
+    EXPECT_EQ(strcmp(str.getBuffer(), "SinaGG"), 0);
+    EXPECT_EQ(str.getStringSize(), 6);
+    EXPECT_EQ(str.getBufferSize(), memoryBlockSize);
+}
+
+TEST(SMP_STRING, SUCCESSFUL_STRING_INCREMENT_OPERATOR4)
+{
+    const size_t totalMemorySize = 1024 * 1024;
+    const size_t memoryBlockSize = 16;
+    smp::SimpleFixedMemoryPool simpleMemoryPool(totalMemorySize, memoryBlockSize, 4, smp::MemoryDistributionPolicy::CloseRanges);
+    size_t memoryBlockCount = totalMemorySize / memoryBlockSize;
+
+    auto str  = smp::SMPString(&simpleMemoryPool, "Sina");
+    auto str2 = smp::SMPString(&simpleMemoryPool, "Sina-Sina-Sina-Sina-");
+    str += str2;
+    EXPECT_EQ(strcmp(str.getBuffer(), "SinaSina-Sina-Sina-Sina-"), 0);
+    EXPECT_EQ(str.getStringSize(), 24);
+    EXPECT_EQ(str.getBufferSize(), 2 * memoryBlockSize);
+}

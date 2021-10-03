@@ -144,6 +144,21 @@ namespace SimpleMemoryPool
         return *this;
     }
 
+    SMPString & SMPString::operator+=(const SMPString & that)
+    {
+        size_t newStringSize = that.getStringSize() + getStringSize();
+        if(newStringSize > getBufferSize())
+        {
+            auto newBuffer = m_memoryPool->allocateMemory(newStringSize);
+            std::strcpy(reinterpret_cast<char *>(newBuffer.ptr), reinterpret_cast<char *>(m_buffer.ptr));
+            m_memoryPool->freeMemory(&m_buffer);
+            m_buffer = newBuffer;
+        }
+        std::strcpy(reinterpret_cast<char *>(m_buffer.ptr + m_stringSize), that.getBuffer());
+        m_stringSize = newStringSize;
+        return *this;
+    }
+
     const char * SMPString::getBuffer() const
     {
         return reinterpret_cast<const char *>(m_buffer.ptr);
